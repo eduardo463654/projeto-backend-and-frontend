@@ -200,7 +200,11 @@ export default function AdminDashboardPage() {
   }, [agendamentos]);
 
   return (
-    <AppShell role="admin" title="Dashboard administrativo">
+    <AppShell
+      role="admin"
+      title="Dashboard administrativo"
+      mainClassName="bg-[#dbeafe] dark:bg-slate-900"
+    >
       <div className="space-y-6">
         {loading ? (
           <p className="text-sm text-muted-foreground">
