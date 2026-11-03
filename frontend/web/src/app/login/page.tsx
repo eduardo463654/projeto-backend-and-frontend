@@ -69,8 +69,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#dbeafe] px-4 py-10 dark:bg-slate-950">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_24px_64px_rgba(15,23,42,0.14)] dark:border-slate-700 dark:bg-slate-900 md:grid-cols-[1.2fr_0.8fr]">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.22),transparent_25%),linear-gradient(135deg,#0b1830,#101f3d_35%,#eaf3ff)] px-4 py-10 dark:from-slate-900 dark:via-slate-800 dark:to-slate-950">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-[32px] border border-white/10 bg-white/10 shadow-[0_30px_80px_rgba(15,23,42,0.35)] backdrop-blur-xl md:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col justify-between bg-[linear-gradient(135deg,#0f172a,#0d3b8c_55%,#1d4ed8)] p-8 text-white">
           <div>
             <div className="mb-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.22em] text-blue-100">

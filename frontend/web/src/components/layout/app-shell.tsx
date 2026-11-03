@@ -15,12 +15,10 @@ export function AppShell({
   role,
   children,
   title,
-  mainClassName,
 }: {
   role: "aluno" | "professor" | "admin" | "monitor";
   children: React.ReactNode;
   title: string;
-  mainClassName?: string;
 }) {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
@@ -115,9 +113,7 @@ export function AppShell({
           </div>
         </header>
 
-        <main className={cn("flex-1 p-4 lg:p-6", mainClassName)}>
-          {children}
-        </main>
+        <main className={cn("flex-1 p-4 lg:p-6")}>{children}</main>
       </div>
     </div>
   );
