@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  aluno
+  professor
+  funcionario
+  admin
+  monitor
+}
+
+enum LaboratorioTipo {
+  redes
+  informatica
+}
+
+enum Periodo {
+  manha
+  tarde
+  noite
+}
+
+enum AgendamentoStatus {
+  pendente
+  aprovado
+  recusado
+  cancelado
+  aguardando_confirmacao_cancelamento
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String        @db.VarChar(100)
+  phone        String        @db.VarChar(20)
+  email        String        @unique @db.VarChar(100)
+  ra           String?       @unique @db.VarChar(7)
+  password     String        @db.VarChar(255)
+  role         UserRole      @default(aluno)
+  agendamentos Agendamento[]
+
+  @@map("users")
+}
+
+model Laboratorio {
+  id            String        @id @default(uuid())
+  nome          String        @db.VarChar(200)
+  tipo          LaboratorioTipo @default(redes)
+  capacidade    Int           @default(1)
+  horariosFixos Json?
+  agendamentos  Agendamento[]
+
+  @@map("laboratorios")
+}
+
+model Agendamento {
+  id                            String             @id @default(uuid())
+  usuarioId                     String
+  laboratorioId                 String
+  computadorId                  String?
+  data                          String
+  periodo                       Periodo
+  horaInicio                    String
+  horaFim                       String
+  finalidade                    String             @db.VarChar(500)
+  precisaMonitor                Boolean            @default(false)
+  foraDoExpediente             Boolean            @default(false)
+  ehEad                        Boolean            @default(false)
+  status                       AgendamentoStatus  @default(pendente)
+  aprovadoPor                  String?
+  createdAt                    DateTime           @default(now())
+  updatedAt                    DateTime           @updatedAt
+
+  usuario                      User               @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  laboratorio                  Laboratorio        @relation(fields: [laboratorioId], references: [id], onDelete: Cascade)
+
+  @@map("agendamentos")
+}

@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+:root {
+  --background: #edf4ff;
+  --foreground: #0a1427;
+  --card: rgba(255, 255, 255, 0.82);
+  --card-foreground: #0a1427;
+  --muted: #e0ecff;
+  --muted-foreground: #4c6281;
+  --border: rgba(148, 163, 184, 0.28);
+  --input: #ffffffe6;
+  --primary: #0f4cbd;
+  --primary-foreground: #f3f8ff;
+  --ring: rgba(15, 76, 189, 0.24);
+  --accent: #dbeafe;
+  --accent-foreground: #10213a;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+.dark {
+  --background: #07111f;
+  --foreground: #edf5ff;
+  --card: rgba(15, 23, 42, 0.86);
+  --card-foreground: #edf5ff;
+  --muted: #11213c;
+  --muted-foreground: #a8bad6;
+  --border: rgba(148, 163, 184, 0.2);
+  --input: rgba(15, 23, 42, 0.9);
+  --primary: #61a5ff;
+  --primary-foreground: #061220;
+  --ring: rgba(97, 165, 255, 0.28);
+  --accent: #182d4d;
+  --accent-foreground: #edf5ff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-ring: var(--ring);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(96, 165, 250, 0.14),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(14, 165, 233, 0.12),
+      transparent 26%
+    ),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(15, 76, 189, 0.18);
+}
