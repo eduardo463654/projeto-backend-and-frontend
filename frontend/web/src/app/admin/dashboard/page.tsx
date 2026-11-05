@@ -28,12 +28,13 @@ export default function AdminDashboardPage() {
   const [laboratorios, setLaboratorios] = useState<Laboratorio[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [dataErrors, setDataErrors] = useState<
+    Partial<Record<"agendamentos" | "laboratorios" | "usuarios", string>>
+  >({});
 
   useEffect(() => {
     let active = true;
     let refreshing = false;
-    let hasLoaded = false;
 
     const refresh = async (initial = false) => {
       if (
@@ -47,32 +48,55 @@ export default function AdminDashboardPage() {
       refreshing = true;
       try {
         if (initial) {
-          const [agendamentosData, laboratoriosData, usuariosData] =
-            await Promise.all([
+          const [agendamentosResult, laboratoriosResult, usuariosResult] =
+            await Promise.allSettled([
               fetchAgendamentos(),
               fetchLaboratorios(),
               fetchUsuarios(),
             ]);
           if (!active) return;
-          setLaboratorios(laboratoriosData);
-          setUsuarios(usuariosData);
-          setAgendamentos(agendamentosData);
+
+          const errors: typeof dataErrors = {};
+          if (agendamentosResult.status === "fulfilled") {
+            setAgendamentos(agendamentosResult.value);
+          } else {
+            errors.agendamentos = "Não foi possível carregar solicitações.";
+          }
+          if (laboratoriosResult.status === "fulfilled") {
+            setLaboratorios(laboratoriosResult.value);
+          } else {
+            errors.laboratorios = "Não foi possível carregar laboratórios.";
+          }
+          if (usuariosResult.status === "fulfilled") {
+            setUsuarios(usuariosResult.value);
+          } else {
+            errors.usuarios = "Não foi possível carregar usuários.";
+          }
+          setDataErrors(errors);
         } else {
           const agendamentosData = await fetchAgendamentos();
-          if (active) setAgendamentos(agendamentosData);
+          if (active) {
+            setAgendamentos(agendamentosData);
+            setDataErrors((current) => {
+              const next = { ...current };
+              delete next.agendamentos;
+              return next;
+            });
+          }
         }
-        if (active) setError("");
       } catch (reason: unknown) {
-        if (active && !hasLoaded)
-          setError(
-            reason instanceof Error
-              ? reason.message
-              : "Não foi possível carregar o dashboard.",
-          );
+        if (active) {
+          setDataErrors((current) => ({
+            ...current,
+            agendamentos:
+              reason instanceof Error
+                ? reason.message
+                : "Não foi possível atualizar solicitações.",
+          }));
+        }
       } finally {
         refreshing = false;
         if (active) setLoading(false);
-        hasLoaded = true;
       }
     };
 
@@ -133,8 +157,23 @@ export default function AdminDashboardPage() {
     const usuariosPorId = new Map(
       usuarios.map((usuario) => [usuario.id, usuario.nome]),
     );
+    const laboratoriosPorId = new Map(
+      laboratorios.map((laboratorio) => [laboratorio.id, laboratorio]),
+    );
 
-    return laboratorios.map((laboratorio) => {
+    agendamentos.forEach((item) => {
+      if (!laboratoriosPorId.has(item.laboratorioId)) {
+        laboratoriosPorId.set(item.laboratorioId, {
+          id: item.laboratorioId,
+          nome: item.laboratorio?.nome ?? item.laboratorioId,
+          tipo: "informatica",
+          capacidade: 0,
+          horariosFixos: [],
+        });
+      }
+    });
+
+    return [...laboratoriosPorId.values()].map((laboratorio) => {
       const solicitacoesPorUsuario = new Map<
         string,
         { nome: string; total: number }
@@ -206,12 +245,17 @@ export default function AdminDashboardPage() {
           <p className="text-sm text-muted-foreground">
             Carregando dados do dashboard...
           </p>
-        ) : error ? (
-          <p role="alert" className="text-sm text-red-600">
-            {error}
-          </p>
         ) : (
           <>
+            {Object.keys(dataErrors).length > 0 && (
+              <p
+                role="status"
+                className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+              >
+                Alguns dados não puderam ser carregados. Os demais gráficos
+                continuam disponíveis.
+              </p>
+            )}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <Card>
                 <CardContent className="flex items-center justify-between p-5">
