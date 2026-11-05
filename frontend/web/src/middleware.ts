@@ -40,7 +40,7 @@ export function middleware(request: NextRequest) {
   }
 
   const isProtected = protectedRoutes.some((prefix) => {
-    pathname.startsWith(prefix);
+    return pathname.startsWith(prefix);
   });
 
   if (!isProtected) {
@@ -48,7 +48,7 @@ export function middleware(request: NextRequest) {
   }
 
   const isAuthorized = allowedRoutes.some((prefix) => {
-    pathname.startsWith(prefix);
+    return pathname.startsWith(prefix);
   });
 
   if (!isAuthorized) {
