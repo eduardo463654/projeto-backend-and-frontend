@@ -26,7 +26,7 @@ export class AgendamentoController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'funcionario', 'monitor')
+  @Roles('admin', 'funcionario', 'monitor', 'professor')
   @HttpCode(HttpStatus.OK)
   findAll() {
     return this.agendamentoService.findAll();
@@ -66,7 +66,7 @@ export class AgendamentoController {
 
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'funcionario', 'monitor')
+  @Roles('admin', 'funcionario', 'monitor', 'professor')
   @HttpCode(HttpStatus.OK)
   updateStatus(
     @Param('id') agendamentoId: string,

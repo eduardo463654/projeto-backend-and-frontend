@@ -48,9 +48,26 @@ describe('UserController', () => {
     expect(userService.create).not.toHaveBeenCalled();
   });
 
+  it('allows monitor registration through the public endpoint', async () => {
+    const createUser: CreateUserDto = {
+      name: 'Monitor Teste',
+      phone: '11999999999',
+      email: 'monitor@example.com',
+      password: 'senha-forte',
+      role: 'monitor',
+      ra: '123456',
+    };
+
+    await controller.create(createUser);
+
+    expect(userService.create).toHaveBeenCalledWith(createUser);
+  });
+
   it('does not allow a regular user to update another account', () => {
+    const updateData: UpdateUserDto = {};
+
     expect(() =>
-      controller.updateById({} as UpdateUserDto, 'another-user', {
+      controller.updateById(updateData, 'another-user', {
         sub: 'current-user',
         role: 'aluno',
       }),

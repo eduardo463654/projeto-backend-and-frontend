@@ -10,16 +10,19 @@ export const cadastroSchema = z
     nome: z.string().min(2, "Informe o nome completo."),
     email: z.string().email("Informe um e-mail válido."),
     telefone: z.string().min(10, "Telefone inválido."),
-    tipo: z.enum(["aluno", "professor"]),
+    tipo: z.enum(["aluno", "professor", "monitor"]),
     ra: z.string().optional(),
     senha: z.string().min(8, "A senha deve ter ao menos 8 caracteres."),
   })
   .superRefine((data, ctx) => {
-    if (data.tipo === "aluno" && (!data.ra || data.ra.trim().length < 6)) {
+    if (
+      ["aluno", "professor", "monitor"].includes(data.tipo) &&
+      (!data.ra || data.ra.trim().length < 6 || data.ra.trim().length > 7)
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["ra"],
-        message: "RA é obrigatório para alunos.",
+        message: "Informe um RA válido com 6 ou 7 caracteres.",
       });
     }
   });

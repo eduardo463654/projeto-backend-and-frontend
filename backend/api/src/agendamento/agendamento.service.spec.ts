@@ -74,4 +74,95 @@ describe('AgendamentoService', () => {
       ),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
+
+  it('only allows professors to decide requests during business hours', async () => {
+    prisma.agendamento.findUnique = jest.fn().mockResolvedValue({
+      id: 'booking-1',
+      status: 'pendente',
+      foraDoExpediente: true,
+    });
+
+    await expect(
+      service.updateStatus(
+        'booking-1',
+        { status: 'aprovado' },
+        'professor-1',
+        'professor',
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('allows professors to approve requests during business hours', async () => {
+    prisma.agendamento.findUnique = jest.fn().mockResolvedValue({
+      id: 'booking-1',
+      status: 'pendente',
+      foraDoExpediente: false,
+    });
+    const updateMock = jest.fn().mockResolvedValue({
+      id: 'booking-1',
+      usuarioId: 'user-1',
+      laboratorioId: 'lab-1',
+      data: futureDate(),
+      periodo: 'manha',
+      horaInicio: '09:00',
+      horaFim: '11:00',
+      finalidade: 'Aula prática de teste',
+      precisaMonitor: false,
+      foraDoExpediente: false,
+      ehEad: false,
+      status: 'aprovado',
+      aprovadoPor: 'professor-1',
+      createdAt: new Date(),
+      laboratorio: { id: 'lab-1', nome: 'Laboratório de teste' },
+      usuario: { id: 'user-1', name: 'Aluno de teste' },
+    });
+    prisma.agendamento.update = updateMock;
+
+    const updated = await service.updateStatus(
+      'booking-1',
+      { status: 'aprovado' },
+      'professor-1',
+      'professor',
+    );
+
+    expect(updated.status).toBe('aprovado');
+    expect(updateMock).toHaveBeenCalled();
+  });
+
+  it('allows monitors to approve requests outside business hours', async () => {
+    prisma.agendamento.findUnique = jest.fn().mockResolvedValue({
+      id: 'booking-1',
+      status: 'pendente',
+      foraDoExpediente: true,
+    });
+    const updateMock = jest.fn().mockResolvedValue({
+      id: 'booking-1',
+      usuarioId: 'user-1',
+      laboratorioId: 'lab-1',
+      data: futureDate(),
+      periodo: 'noite',
+      horaInicio: '23:00',
+      horaFim: '23:30',
+      finalidade: 'Atividade extra',
+      precisaMonitor: false,
+      foraDoExpediente: true,
+      ehEad: false,
+      status: 'aprovado',
+      aprovadoPor: 'monitor-1',
+      createdAt: new Date(),
+      laboratorio: { id: 'lab-1', nome: 'Laboratório de teste' },
+      usuario: { id: 'user-1', name: 'Aluno de teste' },
+    });
+    prisma.agendamento.update = updateMock;
+
+    const updated = await service.updateStatus(
+      'booking-1',
+      { status: 'aprovado' },
+      'monitor-1',
+      'monitor',
+    );
+
+    expect(updated.status).toBe('aprovado');
+    expect(updateMock).toHaveBeenCalled();
+  });
 });

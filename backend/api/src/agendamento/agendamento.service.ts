@@ -175,6 +175,16 @@ export class AgendamentoService {
       );
     }
 
+    if (
+      approverRole === 'professor' &&
+      (agendamento.foraDoExpediente ||
+        !['aprovado', 'recusado'].includes(updateAgendamentoStatusDto.status))
+    ) {
+      throw new ForbiddenException(
+        'Professores só podem decidir solicitações dentro do expediente.',
+      );
+    }
+
     const updated = await this.prismaService.agendamento.update({
       where: { id: agendamentoId },
       data: {

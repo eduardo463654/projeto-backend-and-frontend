@@ -18,25 +18,48 @@ export default function MonitorAprovacoesPage() {
 
   useEffect(() => {
     let active = true;
+    let refreshing = false;
+    let hasLoaded = false;
 
-    fetchAgendamentos()
-      .then((data) => {
-        if (active) setAgendamentos(data);
-      })
-      .catch((reason: unknown) => {
-        if (active)
+    const refresh = async () => {
+      if (!active || refreshing || document.visibilityState === "hidden")
+        return;
+
+      refreshing = true;
+      try {
+        const data = await fetchAgendamentos();
+        if (active) {
+          setAgendamentos(data);
+          setError("");
+        }
+      } catch (reason: unknown) {
+        if (active && !hasLoaded)
           setError(
             reason instanceof Error
               ? reason.message
               : "Não foi possível carregar a fila.",
           );
-      })
-      .finally(() => {
+      } finally {
+        refreshing = false;
+        hasLoaded = true;
         if (active) setLoading(false);
-      });
+      }
+    };
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+
+    void refresh();
+    const intervalId = window.setInterval(() => void refresh(), 5000);
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
 
     return () => {
       active = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
   }, []);
 
@@ -91,9 +114,14 @@ export default function MonitorAprovacoesPage() {
                   className="flex flex-col gap-3 rounded-lg border border-border p-3 md:flex-row md:items-center md:justify-between"
                 >
                   <div>
-                    <p className="font-medium">{item.finalidade}</p>
+                    <p className="font-medium">
+                      {item.usuario?.nome ?? "Solicitante"} · {item.finalidade}
+                    </p>
                     <p className="text-sm text-muted-foreground">
-                      {item.data} · {item.horaInicio} até {item.horaFim}
+                      {item.laboratorio?.nome ?? item.laboratorioId}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {item.data} · {item.horaInicio} às {item.horaFim}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">

@@ -2,10 +2,11 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
-  IsOptional,
   IsString,
+  Matches,
   MaxLength,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -21,10 +22,14 @@ export class CreateUserDto {
   @IsEmail()
   email: string;
 
-  @IsOptional()
+  @ValidateIf((user: CreateUserDto) =>
+    ['aluno', 'professor', 'monitor'].includes(user.role),
+  )
+  @IsNotEmpty({ message: 'RA é obrigatório para aluno, professor e monitor.' })
   @IsString()
   @MinLength(6)
   @MaxLength(7)
+  @Matches(/\S/, { message: 'RA não pode conter apenas espaços.' })
   ra?: string;
 
   @IsNotEmpty()
