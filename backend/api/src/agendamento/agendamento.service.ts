@@ -211,6 +211,7 @@ export class AgendamentoService {
       | 'aguardando_confirmacao_cancelamento';
     aprovadoPor?: string | null;
     createdAt: Date;
+    updatedAt: Date;
     laboratorio?: { id: string; nome?: string } | null;
     usuario?: { id: string; name: string } | null;
   }) {
@@ -230,6 +231,10 @@ export class AgendamentoService {
       status: agendamento.status,
       aprovadoPor: agendamento.aprovadoPor ?? undefined,
       criadoEm: agendamento.createdAt.toISOString(),
+      respondidaEm:
+        agendamento.status === 'aprovado' || agendamento.status === 'recusado'
+          ? agendamento.updatedAt.toISOString()
+          : undefined,
       laboratorio: agendamento.laboratorio
         ? { id: agendamento.laboratorio.id, nome: agendamento.laboratorio.nome }
         : undefined,

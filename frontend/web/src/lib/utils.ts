@@ -13,6 +13,16 @@ export function formatDate(date: string) {
   }).format(new Date(date));
 }
 
+export function formatDateTime(date: string) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(date));
+}
+
 export function getStatusColor(status: string) {
   switch (status) {
     case "pendente":

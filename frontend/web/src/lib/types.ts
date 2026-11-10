@@ -58,6 +58,7 @@ export interface Agendamento {
   status: StatusAgendamento;
   aprovadoPor?: string;
   criadoEm: string;
+  respondidaEm?: string;
   laboratorio?: Pick<Laboratorio, "id" | "nome">;
   usuario?: Pick<Usuario, "id" | "nome">;
 }

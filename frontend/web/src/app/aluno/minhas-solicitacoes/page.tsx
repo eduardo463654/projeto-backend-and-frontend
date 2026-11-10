@@ -14,6 +14,7 @@ import {
 import { AppShell } from "@/components/layout/app-shell";
 import { fetchMeusAgendamentos } from "@/lib/services";
 import { usePolling } from "@/lib/use-polling";
+import { formatDateTime, getStatusColor } from "@/lib/utils";
 import type { Agendamento } from "@/lib/types";
 
 export default function MinhasSolicitacoesAlunoPage() {
@@ -69,6 +70,8 @@ export default function MinhasSolicitacoesAlunoPage() {
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Laboratório</TableHead>
+                  <TableHead>Solicitada em</TableHead>
+                  <TableHead>Respondida em</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Finalidade</TableHead>
                 </TableRow>
@@ -80,18 +83,16 @@ export default function MinhasSolicitacoesAlunoPage() {
                     <TableCell>
                       {item.laboratorio?.nome ?? item.laboratorioId}
                     </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {formatDateTime(item.criadoEm)}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {item.respondidaEm
+                        ? formatDateTime(item.respondidaEm)
+                        : "—"}
+                    </TableCell>
                     <TableCell>
-                      <Badge
-                        className={
-                          item.status === "pendente"
-                            ? "bg-amber-100 text-amber-800"
-                            : item.status === "aprovado"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : item.status === "cancelado"
-                                ? "bg-slate-200 text-slate-800"
-                                : "bg-red-100 text-red-800"
-                        }
-                      >
+                      <Badge className={getStatusColor(item.status)}>
                         {item.status}
                       </Badge>
                     </TableCell>

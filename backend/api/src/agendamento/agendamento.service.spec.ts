@@ -74,4 +74,48 @@ describe('AgendamentoService', () => {
       ),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
+
+  it.each(['aprovado', 'recusado'] as const)(
+    'returns the decision time when a request is %s',
+    async (status) => {
+      const createdAt = new Date('2026-11-10T12:00:00.000Z');
+      const updatedAt = new Date('2026-11-10T14:30:00.000Z');
+
+      prisma.agendamento.findUnique = jest.fn().mockResolvedValue({
+        id: 'booking-1',
+        status: 'pendente',
+        foraDoExpediente: false,
+      });
+      prisma.agendamento.update = jest.fn().mockResolvedValue({
+        id: 'booking-1',
+        usuarioId: 'user-1',
+        laboratorioId: 'lab-1',
+        computadorId: null,
+        data: '2026-11-12',
+        periodo: 'manha',
+        horaInicio: '09:00',
+        horaFim: '11:00',
+        finalidade: 'Aula prática de teste',
+        precisaMonitor: false,
+        foraDoExpediente: false,
+        ehEad: false,
+        status,
+        aprovadoPor: status === 'aprovado' ? 'admin-1' : null,
+        createdAt,
+        updatedAt,
+        laboratorio: { id: 'lab-1', nome: 'Laboratório de Redes' },
+        usuario: { id: 'user-1', name: 'Aluno de teste' },
+      });
+
+      const result = await service.updateStatus(
+        'booking-1',
+        { status },
+        'admin-1',
+        'admin',
+      );
+
+      expect(result.criadoEm).toBe(createdAt.toISOString());
+      expect(result.respondidaEm).toBe(updatedAt.toISOString());
+    },
+  );
 });

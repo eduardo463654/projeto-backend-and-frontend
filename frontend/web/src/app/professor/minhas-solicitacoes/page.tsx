@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { fetchMeusAgendamentos } from "@/lib/services";
 import { usePolling } from "@/lib/use-polling";
+import { formatDateTime, getStatusColor } from "@/lib/utils";
 import type { Agendamento } from "@/lib/types";
 
 export default function MinhasSolicitacoesProfessorPage() {
@@ -69,6 +70,8 @@ export default function MinhasSolicitacoesProfessorPage() {
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Laboratório</TableHead>
+                  <TableHead>Solicitada em</TableHead>
+                  <TableHead>Respondida em</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -79,14 +82,16 @@ export default function MinhasSolicitacoesProfessorPage() {
                     <TableCell>
                       {item.laboratorio?.nome ?? item.laboratorioId}
                     </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {formatDateTime(item.criadoEm)}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {item.respondidaEm
+                        ? formatDateTime(item.respondidaEm)
+                        : "—"}
+                    </TableCell>
                     <TableCell>
-                      <Badge
-                        className={
-                          item.status === "aprovado"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-amber-100 text-amber-800"
-                        }
-                      >
+                      <Badge className={getStatusColor(item.status)}>
                         {item.status}
                       </Badge>
                     </TableCell>
