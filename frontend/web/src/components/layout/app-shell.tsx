@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bell, LogOut, Menu, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
-import { clearAuthSession } from "@/lib/api";
+import { clearAuthSession, getStoredUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export function AppShell({
@@ -23,6 +23,7 @@ export function AppShell({
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const notificationHref =
     role === "admin"
       ? "/admin/aprovacoes"
@@ -30,10 +31,28 @@ export function AppShell({
         ? "/monitor/aprovacoes-extras"
         : `/${role}/minhas-solicitacoes`;
 
+  useEffect(() => {
+    const userRole = getStoredUser()?.role;
+    if (typeof userRole !== "string") {
+      router.replace("/login");
+      return;
+    }
+
+    const roleMatches = userRole === role || (role === "professor" && userRole === "funcionario");
+    if (!roleMatches) {
+      router.replace("/acesso-negado");
+      return;
+    }
+
+    queueMicrotask(() => setSessionChecked(true));
+  }, [role, router]);
+
   const handleLogout = () => {
     clearAuthSession();
     router.push("/login");
   };
+
+  if (!sessionChecked) return null;
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">

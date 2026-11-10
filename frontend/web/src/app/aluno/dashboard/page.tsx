@@ -25,61 +25,27 @@ export default function AlunoDashboardPage() {
 
   useEffect(() => {
     let active = true;
-    let refreshing = false;
-    let hasLoaded = false;
 
-    const refresh = async (initial = false) => {
-      if (
-        !active ||
-        refreshing ||
-        (!initial && document.visibilityState === "hidden")
-      ) {
-        return;
-      }
-
-      refreshing = true;
-      try {
-        if (initial) {
-          const [agendamentosData, laboratoriosData] = await Promise.all([
-            fetchMeusAgendamentos(),
-            fetchLaboratorios(),
-          ]);
-          if (!active) return;
-          setLaboratorios(laboratoriosData);
-          setAgendamentos(agendamentosData);
-        } else {
-          const agendamentosData = await fetchMeusAgendamentos();
-          if (active) setAgendamentos(agendamentosData);
-        }
-        if (active) setError("");
-      } catch (reason: unknown) {
-        if (active && !hasLoaded)
+    Promise.all([fetchMeusAgendamentos(), fetchLaboratorios()])
+      .then(([agendamentosData, laboratoriosData]) => {
+        if (!active) return;
+        setAgendamentos(agendamentosData);
+        setLaboratorios(laboratoriosData);
+      })
+      .catch((reason: unknown) => {
+        if (active)
           setError(
             reason instanceof Error
               ? reason.message
               : "Não foi possível carregar o dashboard.",
           );
-      } finally {
-        refreshing = false;
-        hasLoaded = true;
+      })
+      .finally(() => {
         if (active) setLoading(false);
-      }
-    };
-
-    const refreshWhenVisible = () => {
-      if (document.visibilityState === "visible") void refresh();
-    };
-
-    void refresh(true);
-    const intervalId = window.setInterval(() => void refresh(), 5000);
-    window.addEventListener("focus", refreshWhenVisible);
-    document.addEventListener("visibilitychange", refreshWhenVisible);
+      });
 
     return () => {
       active = false;
-      window.clearInterval(intervalId);
-      window.removeEventListener("focus", refreshWhenVisible);
-      document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
   }, []);
 

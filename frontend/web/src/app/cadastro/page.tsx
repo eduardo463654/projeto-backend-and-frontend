@@ -45,9 +45,7 @@ export default function CadastroPage() {
         phone: values.telefone,
         email: values.email.trim().toLowerCase(),
         password: values.senha,
-        ra: ["aluno", "professor", "monitor"].includes(values.tipo)
-          ? values.ra?.trim()
-          : undefined,
+        ra: values.ra,
         role: values.tipo,
       });
 
@@ -62,20 +60,18 @@ export default function CadastroPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#cbd5e1] px-4 py-10">
-      <Card className="w-full max-w-2xl border-slate-200 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
-        <CardHeader className="pb-5">
+    <div className="auth-page-background flex min-h-screen items-center justify-center px-4 py-10">
+      <Card className="w-full max-w-2xl shadow-xl">
+        <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-50 p-2 text-blue-700">
+            <div className="rounded-lg bg-primary/10 p-2 text-primary">
               <UserPlus className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 Cadastro
               </p>
-              <CardTitle className="text-xl font-semibold text-slate-900">
-                Criar usuário
-              </CardTitle>
+              <CardTitle>Criar usuário</CardTitle>
             </div>
           </div>
         </CardHeader>
@@ -86,14 +82,8 @@ export default function CadastroPage() {
             onSubmit={form.handleSubmit(onSubmit)}
           >
             <div className="space-y-2 md:col-span-2">
-              <Label className="font-medium text-slate-700">
-                Nome completo
-              </Label>
-              <Input
-                {...form.register("nome")}
-                placeholder="Maria Clara"
-                className="border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-500 focus-visible:bg-white"
-              />
+              <Label>Nome completo</Label>
+              <Input {...form.register("nome")} placeholder="Maria Clara" />
               {form.formState.errors.nome && (
                 <p className="text-sm text-red-600">
                   {form.formState.errors.nome.message}
@@ -101,11 +91,10 @@ export default function CadastroPage() {
               )}
             </div>
             <div className="space-y-2">
-              <Label className="font-medium text-slate-700">E-mail</Label>
+              <Label>E-mail</Label>
               <Input
                 {...form.register("email")}
                 placeholder="maria@instituicao.edu"
-                className="border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-500 focus-visible:bg-white"
               />
               {form.formState.errors.email && (
                 <p className="text-sm text-red-600">
@@ -114,9 +103,7 @@ export default function CadastroPage() {
               )}
             </div>
             <div className="space-y-2">
-              <Label className="font-medium text-slate-700">
-                Tipo de usuário
-              </Label>
+              <Label>Tipo de usuário</Label>
               <Select
                 onValueChange={(value) =>
                   form.setValue(
@@ -132,16 +119,14 @@ export default function CadastroPage() {
                 <SelectContent>
                   <SelectItem value="aluno">Aluno</SelectItem>
                   <SelectItem value="professor">Professor</SelectItem>
-                  <SelectItem value="monitor">Monitor</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="font-medium text-slate-700">Telefone</Label>
+              <Label>Telefone</Label>
               <Input
                 {...form.register("telefone")}
                 placeholder="(11) 99999-9999"
-                className="border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-500 focus-visible:bg-white"
               />
               {form.formState.errors.telefone && (
                 <p className="text-sm text-red-600">
@@ -149,32 +134,26 @@ export default function CadastroPage() {
                 </p>
               )}
             </div>
-            {["aluno", "professor", "monitor"].includes(tipo) && (
-              <div className="space-y-2">
-                <Label htmlFor="ra" className="font-medium text-slate-700">
-                  RA
-                </Label>
-                <Input
-                  id="ra"
-                  {...form.register("ra")}
-                  placeholder="Informe seu RA"
-                  className="border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-500 focus-visible:bg-white"
-                />
-                {form.formState.errors.ra && (
-                  <p className="flex items-center gap-2 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />
-                    {String(form.formState.errors.ra.message)}
-                  </p>
-                )}
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="ra">RA</Label>
+              <Input
+                id="ra"
+                {...form.register("ra")}
+                placeholder="Digite seu RA"
+              />
+              {form.formState.errors.ra && (
+                <p className="flex items-center gap-2 text-sm text-red-600">
+                  <AlertCircle className="h-4 w-4" />
+                  {String(form.formState.errors.ra.message)}
+                </p>
+              )}
+            </div>
             <div className="space-y-2 md:col-span-2">
-              <Label className="font-medium text-slate-700">Senha</Label>
+              <Label>Senha</Label>
               <Input
                 type="password"
                 {...form.register("senha")}
                 placeholder="Crie uma senha forte"
-                className="border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-500 focus-visible:bg-white"
               />
               {form.formState.errors.senha && (
                 <p className="text-sm text-red-600">
@@ -185,7 +164,7 @@ export default function CadastroPage() {
             <div className="md:col-span-2 flex items-center justify-between gap-3 pt-2">
               <Link
                 href="/login"
-                className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+                className="text-sm text-muted-foreground hover:text-foreground"
               >
                 Voltar ao login
               </Link>

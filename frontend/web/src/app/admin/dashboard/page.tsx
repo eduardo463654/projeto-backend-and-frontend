@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getDay, parseISO } from "date-fns";
 import {
   Bar,
   BarChart,
@@ -12,10 +11,19 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CalendarCheck2, CalendarClock, UsersRound } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   fetchAgendamentos,
   fetchLaboratorios,
@@ -23,97 +31,66 @@ import {
 } from "@/lib/services";
 import type { Agendamento, Laboratorio, Usuario } from "@/lib/types";
 
+type StatusFiltro = "todas" | "pendente" | "aprovado" | "recusado";
+
+const filtrosStatus: { value: StatusFiltro; label: string }[] = [
+  { value: "todas", label: "Todas" },
+  { value: "pendente", label: "Pendentes" },
+  { value: "aprovado", label: "Aprovadas" },
+  { value: "recusado", label: "Recusadas" },
+];
+
+function formatarData(data: string) {
+  const dateParts = /^(\d{4})-(\d{2})-(\d{2})/.exec(data);
+  const date = dateParts
+    ? new Date(
+        Number(dateParts[1]),
+        Number(dateParts[2]) - 1,
+        Number(dateParts[3]),
+      )
+    : new Date(data);
+
+  if (Number.isNaN(date.getTime())) return data;
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
 export default function AdminDashboardPage() {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [laboratorios, setLaboratorios] = useState<Laboratorio[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dataErrors, setDataErrors] = useState<
-    Partial<Record<"agendamentos" | "laboratorios" | "usuarios", string>>
-  >({});
+  const [error, setError] = useState("");
+  const [statusFiltro, setStatusFiltro] = useState<StatusFiltro>("todas");
 
   useEffect(() => {
     let active = true;
-    let refreshing = false;
 
-    const refresh = async (initial = false) => {
-      if (
-        !active ||
-        refreshing ||
-        (!initial && document.visibilityState === "hidden")
-      ) {
-        return;
-      }
-
-      refreshing = true;
-      try {
-        if (initial) {
-          const [agendamentosResult, laboratoriosResult, usuariosResult] =
-            await Promise.allSettled([
-              fetchAgendamentos(),
-              fetchLaboratorios(),
-              fetchUsuarios(),
-            ]);
-          if (!active) return;
-
-          const errors: typeof dataErrors = {};
-          if (agendamentosResult.status === "fulfilled") {
-            setAgendamentos(agendamentosResult.value);
-          } else {
-            errors.agendamentos = "Não foi possível carregar solicitações.";
-          }
-          if (laboratoriosResult.status === "fulfilled") {
-            setLaboratorios(laboratoriosResult.value);
-          } else {
-            errors.laboratorios = "Não foi possível carregar laboratórios.";
-          }
-          if (usuariosResult.status === "fulfilled") {
-            setUsuarios(usuariosResult.value);
-          } else {
-            errors.usuarios = "Não foi possível carregar usuários.";
-          }
-          setDataErrors(errors);
-        } else {
-          const agendamentosData = await fetchAgendamentos();
-          if (active) {
-            setAgendamentos(agendamentosData);
-            setDataErrors((current) => {
-              const next = { ...current };
-              delete next.agendamentos;
-              return next;
-            });
-          }
-        }
-      } catch (reason: unknown) {
-        if (active) {
-          setDataErrors((current) => ({
-            ...current,
-            agendamentos:
-              reason instanceof Error
-                ? reason.message
-                : "Não foi possível atualizar solicitações.",
-          }));
-        }
-      } finally {
-        refreshing = false;
+    Promise.all([fetchAgendamentos(), fetchLaboratorios(), fetchUsuarios()])
+      .then(([agendamentosData, laboratoriosData, usuariosData]) => {
+        if (!active) return;
+        setAgendamentos(agendamentosData);
+        setLaboratorios(laboratoriosData);
+        setUsuarios(usuariosData);
+      })
+      .catch((reason: unknown) => {
+        if (active)
+          setError(
+            reason instanceof Error
+              ? reason.message
+              : "Não foi possível carregar o dashboard.",
+          );
+      })
+      .finally(() => {
         if (active) setLoading(false);
-      }
-    };
-
-    const refreshWhenVisible = () => {
-      if (document.visibilityState === "visible") void refresh();
-    };
-
-    void refresh(true);
-    const intervalId = window.setInterval(() => void refresh(), 5000);
-    window.addEventListener("focus", refreshWhenVisible);
-    document.addEventListener("visibilitychange", refreshWhenVisible);
+      });
 
     return () => {
       active = false;
-      window.clearInterval(intervalId);
-      window.removeEventListener("focus", refreshWhenVisible);
-      document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
   }, []);
 
@@ -122,121 +99,85 @@ export default function AdminDashboardPage() {
     [agendamentos],
   );
 
-  const usoEad = useMemo(
-    () => agendamentos.filter((item) => item.ehEad).length,
-    [agendamentos],
-  );
-
   const aprovados = useMemo(
     () => agendamentos.filter((item) => item.status === "aprovado").length,
     [agendamentos],
   );
 
-  const pendentesPorDia = useMemo(() => {
-    const map = new Map<number, number>();
+  const recusados = useMemo(
+    () => agendamentos.filter((item) => item.status === "recusado").length,
+    [agendamentos],
+  );
 
-    agendamentos
-      .filter((item) => item.status === "pendente")
-      .forEach((item) => {
-        const day = getDay(parseISO(item.data));
-        map.set(day, (map.get(day) ?? 0) + 1);
-      });
-
-    return [
-      { dia: "Seg", total: map.get(1) ?? 0 },
-      { dia: "Ter", total: map.get(2) ?? 0 },
-      { dia: "Qua", total: map.get(3) ?? 0 },
-      { dia: "Qui", total: map.get(4) ?? 0 },
-      { dia: "Sex", total: map.get(5) ?? 0 },
-      { dia: "Sáb", total: map.get(6) ?? 0 },
-      { dia: "Dom", total: map.get(0) ?? 0 },
-    ];
-  }, [agendamentos]);
-
-  const solicitacoesPorLaboratorio = useMemo(() => {
-    const usuariosPorId = new Map(
-      usuarios.map((usuario) => [usuario.id, usuario.nome]),
-    );
-    const laboratoriosPorId = new Map(
-      laboratorios.map((laboratorio) => [laboratorio.id, laboratorio]),
-    );
-
-    agendamentos.forEach((item) => {
-      if (!laboratoriosPorId.has(item.laboratorioId)) {
-        laboratoriosPorId.set(item.laboratorioId, {
-          id: item.laboratorioId,
-          nome: item.laboratorio?.nome ?? item.laboratorioId,
-          tipo: "informatica",
-          capacidade: 0,
-          horariosFixos: [],
-        });
-      }
-    });
-
-    return [...laboratoriosPorId.values()].map((laboratorio) => {
-      const solicitacoesPorUsuario = new Map<
-        string,
-        { nome: string; total: number }
-      >();
-
+  const solicitacoes = useMemo(
+    () =>
       agendamentos
-        .filter((item) => item.laboratorioId === laboratorio.id)
-        .forEach((item) => {
-          const solicitacao = solicitacoesPorUsuario.get(item.usuarioId) ?? {
-            nome:
-              item.usuario?.nome ??
-              usuariosPorId.get(item.usuarioId) ??
-              "Usuário não identificado",
-            total: 0,
-          };
-          solicitacao.total += 1;
-          solicitacoesPorUsuario.set(item.usuarioId, solicitacao);
-        });
+        .filter(
+          (item) =>
+            item.status === "pendente" ||
+            item.status === "aprovado" ||
+            item.status === "recusado",
+        )
+        .sort((first, second) =>
+          second.criadoEm.localeCompare(first.criadoEm),
+        ),
+    [agendamentos],
+  );
 
-      const solicitacoes = [...solicitacoesPorUsuario.values()];
-      const maiorTotal = Math.max(0, ...solicitacoes.map((item) => item.total));
-      const principaisSolicitantes = solicitacoes
-        .filter((item) => item.total === maiorTotal && maiorTotal > 0)
-        .map((item) => item.nome);
+  const solicitacoesVisiveis = useMemo(
+    () =>
+      statusFiltro === "todas"
+        ? solicitacoes
+        : solicitacoes.filter((item) => item.status === statusFiltro),
+    [solicitacoes, statusFiltro],
+  );
 
-      return {
-        laboratorio:
-          laboratorio.nome.split("—").pop()?.trim() ?? laboratorio.nome,
-        solicitantes: principaisSolicitantes.length
-          ? principaisSolicitantes.join(", ")
-          : "Sem solicitações",
-        total: maiorTotal,
-      };
-    });
-  }, [agendamentos, laboratorios, usuarios]);
+  const contagemPorStatus: Record<StatusFiltro, number> = {
+    todas: solicitacoes.length,
+    pendente: pendentes,
+    aprovado: aprovados,
+    recusado: recusados,
+  };
 
-  const usuariosPorPerfil = useMemo(() => {
-    const perfis: Array<{ tipo: Usuario["tipo"]; nome: string }> = [
-      { tipo: "aluno", nome: "Alunos" },
-      { tipo: "professor", nome: "Professores" },
-      { tipo: "funcionario", nome: "Funcionários" },
-      { tipo: "monitor", nome: "Monitores" },
-      { tipo: "admin", nome: "Administradores" },
-    ];
+  const aprovacoesPorLaboratorio = useMemo(
+    () =>
+      laboratorios.map((laboratorio) => ({
+        nome: laboratorio.nome,
+        total: agendamentos.filter(
+          (item) =>
+            item.laboratorioId === laboratorio.id &&
+            item.status === "aprovado",
+        ).length,
+      }))
+        .filter((laboratorio) => laboratorio.total > 0)
+        .sort((first, second) => second.total - first.total),
+    [agendamentos, laboratorios],
+  );
 
-    return perfis.map(({ tipo, nome }) => ({
-      nome,
-      total: usuarios.filter((usuario) => usuario.tipo === tipo).length,
-    }));
-  }, [usuarios]);
+  const usoPorTipo = useMemo(
+    () => [
+      {
+        nome: "Aluno",
+        valor: usuarios.filter((usuario) => usuario.tipo === "aluno").length,
+      },
+      {
+        nome: "Professor",
+        valor: usuarios.filter((usuario) => usuario.tipo === "professor")
+          .length,
+      },
+      {
+        nome: "Funcionário",
+        valor: usuarios.filter((usuario) => usuario.tipo === "funcionario")
+          .length,
+      },
+    ].filter((item) => item.valor > 0),
+    [usuarios],
+  );
 
-  const agendamentosPorStatus = useMemo(() => {
-    const status: Array<{ chave: Agendamento["status"]; nome: string }> = [
-      { chave: "pendente", nome: "Pendentes" },
-      { chave: "aprovado", nome: "Aprovados" },
-      { chave: "recusado", nome: "Recusados" },
-    ];
-
-    return status.map(({ chave, nome }) => ({
-      nome,
-      total: agendamentos.filter((item) => item.status === chave).length,
-    }));
-  }, [agendamentos]);
+  const chartHeight = Math.max(
+    184,
+    Math.max(aprovacoesPorLaboratorio.length, usoPorTipo.length) * 56 + 40,
+  );
 
   return (
     <AppShell role="admin" title="Dashboard administrativo">
@@ -245,324 +186,188 @@ export default function AdminDashboardPage() {
           <p className="text-sm text-muted-foreground">
             Carregando dados do dashboard...
           </p>
+        ) : error ? (
+          <p role="alert" className="text-sm text-red-600">
+            {error}
+          </p>
         ) : (
           <>
-            {Object.keys(dataErrors).length > 0 && (
-              <p
-                role="status"
-                className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
-              >
-                Alguns dados não puderam ser carregados. Os demais gráficos
-                continuam disponíveis.
-              </p>
-            )}
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               <Card>
-                <CardContent className="flex items-center justify-between p-5">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Solicitações pendentes
-                    </p>
-                    <p className="mt-2 text-3xl font-semibold tabular-nums">
-                      {pendentes}
-                    </p>
-                  </div>
-                  <CalendarClock className="h-5 w-5 text-amber-600" />
+                <CardHeader>
+                  <CardTitle>Solicitações pendentes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-semibold">{pendentes}</p>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="flex items-center justify-between p-5">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Agendamentos aprovados
-                    </p>
-                    <p className="mt-2 text-3xl font-semibold tabular-nums">
-                      {aprovados}
-                    </p>
-                  </div>
-                  <CalendarCheck2 className="h-5 w-5 text-emerald-600" />
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="flex items-center justify-between p-5">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Agendamentos EAD
-                    </p>
-                    <p className="mt-2 text-3xl font-semibold tabular-nums">
-                      {usoEad}
-                    </p>
-                  </div>
-                  <UsersRound className="h-5 w-5 text-sky-700" />
+                <CardHeader>
+                  <CardTitle>Aprovações</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-semibold">{aprovados}</p>
                 </CardContent>
               </Card>
             </div>
 
-            <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+            <div className="grid gap-6 xl:grid-cols-2">
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">
-                    Solicitações pendentes por dia
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Distribuição por dia da semana
-                  </p>
+                <CardHeader>
+                  <CardTitle>Aprovações por laboratório</CardTitle>
                 </CardHeader>
-                <CardContent className="h-[280px] px-4 pb-5 pt-2">
-                  {pendentes > 0 ? (
+                <CardContent style={{ height: chartHeight }}>
+                  {aprovacoesPorLaboratorio.length === 0 ? (
+                    <p className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                      Nenhuma aprovação registrada.
+                    </p>
+                  ) : (
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={pendentesPorDia}
-                        margin={{ top: 12, right: 8, left: -20, bottom: 0 }}
-                      >
-                        <CartesianGrid
-                          vertical={false}
-                          stroke="#e2e8f0"
-                          strokeDasharray="3 4"
-                        />
-                        <XAxis
-                          dataKey="dia"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#64748b", fontSize: 12 }}
-                          tickMargin={10}
-                        />
-                        <YAxis
-                          allowDecimals={false}
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#64748b", fontSize: 12 }}
-                        />
-                        <Tooltip
-                          cursor={{ fill: "rgba(15, 23, 42, 0.04)" }}
-                          contentStyle={{
-                            backgroundColor: "var(--background)",
-                            border: "1px solid var(--border)",
-                            borderRadius: 6,
-                          }}
-                        />
-                        <Bar
-                          dataKey="total"
-                          name="Solicitações"
-                          fill="#2563eb"
-                          radius={[4, 4, 0, 0]}
-                          maxBarSize={36}
-                        />
+                      <BarChart data={aprovacoesPorLaboratorio} layout="vertical" margin={{ top: 4, right: 28, left: 8, bottom: 4 }}>
+                        <CartesianGrid horizontal={false} stroke="var(--border)" strokeDasharray="3 3" />
+                        <XAxis type="number" allowDecimals={false} domain={[0, "dataMax + 1"]} axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
+                        <YAxis dataKey="nome" type="category" width={132} axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
+                        <Tooltip cursor={{ fill: "var(--muted)", opacity: 0.55 }} contentStyle={{ backgroundColor: "var(--popover)", borderColor: "var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }} />
+                        <Bar dataKey="total" name="Aprovações" fill="var(--success)" radius={[0, 5, 5, 0]} maxBarSize={28}>
+                          <LabelList dataKey="total" position="right" fill="var(--muted-foreground)" fontSize={11} />
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
-                  ) : (
-                    <ChartEmptyState />
                   )}
                 </CardContent>
               </Card>
+
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">
-                    Principal solicitante por laboratório
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Solicitações registradas em cada laboratório
-                  </p>
+                <CardHeader>
+                  <CardTitle>Uso por tipo de usuário</CardTitle>
                 </CardHeader>
-                <CardContent className="px-4 pb-5 pt-2">
-                  {solicitacoesPorLaboratorio.length > 0 ? (
-                    <div
-                      style={{
-                        height: Math.max(
-                          240,
-                          solicitacoesPorLaboratorio.length * 48,
-                        ),
-                      }}
-                    >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={solicitacoesPorLaboratorio}
-                          layout="vertical"
-                          margin={{ top: 12, right: 112, left: 8, bottom: 0 }}
-                        >
-                          <CartesianGrid
-                            horizontal={false}
-                            stroke="#e2e8f0"
-                            strokeDasharray="3 4"
-                          />
-                          <XAxis
-                            type="number"
-                            allowDecimals={false}
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{ fill: "#64748b", fontSize: 12 }}
-                          />
-                          <YAxis
-                            dataKey="laboratorio"
-                            type="category"
-                            width={100}
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{ fill: "#64748b", fontSize: 12 }}
-                          />
-                          <Tooltip
-                            cursor={{ fill: "rgba(15, 23, 42, 0.04)" }}
-                            labelFormatter={(label) => `Laboratório: ${label}`}
-                            contentStyle={{
-                              backgroundColor: "var(--background)",
-                              border: "1px solid var(--border)",
-                              borderRadius: 6,
-                            }}
-                          />
-                          <Bar
-                            dataKey="total"
-                            name="Solicitações"
-                            fill="#0f766e"
-                            radius={[0, 4, 4, 0]}
-                            maxBarSize={28}
-                          >
-                            <LabelList
-                              dataKey="solicitantes"
-                              position="right"
-                              fill="#334155"
-                              fontSize={12}
-                            />
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
+                <CardContent style={{ height: chartHeight }}>
+                  {usoPorTipo.length === 0 ? (
+                    <p className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                      Nenhum usuário cadastrado.
+                    </p>
                   ) : (
-                    <div className="h-[240px]">
-                      <ChartEmptyState />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">
-                    Usuários por perfil
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Distribuição das contas cadastradas
-                  </p>
-                </CardHeader>
-                <CardContent className="h-[280px] px-4 pb-5 pt-2">
-                  {usuarios.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
-                        data={usuariosPorPerfil}
+                        data={usoPorTipo}
                         layout="vertical"
-                        margin={{ top: 12, right: 16, left: 8, bottom: 0 }}
+                        margin={{ top: 4, right: 28, left: 8, bottom: 4 }}
                       >
-                        <CartesianGrid
-                          horizontal={false}
-                          stroke="#e2e8f0"
-                          strokeDasharray="3 4"
-                        />
-                        <XAxis
-                          type="number"
-                          allowDecimals={false}
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#64748b", fontSize: 12 }}
-                        />
-                        <YAxis
-                          dataKey="nome"
-                          type="category"
-                          width={112}
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#64748b", fontSize: 12 }}
-                        />
-                        <Tooltip
-                          cursor={{ fill: "rgba(15, 23, 42, 0.04)" }}
-                          contentStyle={{
-                            backgroundColor: "var(--background)",
-                            border: "1px solid var(--border)",
-                            borderRadius: 6,
-                          }}
-                        />
-                        <Bar
-                          dataKey="total"
-                          name="Usuários"
-                          fill="#d97706"
-                          radius={[0, 4, 4, 0]}
-                          maxBarSize={28}
-                        />
+                        <CartesianGrid horizontal={false} stroke="var(--border)" strokeDasharray="3 3" />
+                        <XAxis type="number" allowDecimals={false} domain={[0, "dataMax + 1"]} axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
+                        <YAxis dataKey="nome" type="category" width={100} axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
+                        <Tooltip cursor={{ fill: "var(--muted)", opacity: 0.55 }} contentStyle={{ backgroundColor: "var(--popover)", borderColor: "var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }} />
+                        <Bar dataKey="valor" name="Usuários" fill="var(--primary)" radius={[0, 5, 5, 0]} maxBarSize={32}>
+                          <LabelList dataKey="valor" position="right" fill="var(--muted-foreground)" fontSize={11} />
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
-                  ) : (
-                    <ChartEmptyState />
-                  )}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">
-                    Agendamentos por status
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Visão geral das solicitações
-                  </p>
-                </CardHeader>
-                <CardContent className="h-[280px] px-4 pb-5 pt-2">
-                  {agendamentos.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={agendamentosPorStatus}
-                        layout="vertical"
-                        margin={{ top: 8, right: 12, left: 0, bottom: 0 }}
-                      >
-                        <CartesianGrid
-                          horizontal={false}
-                          stroke="#e2e8f0"
-                          strokeDasharray="3 4"
-                        />
-                        <XAxis
-                          type="number"
-                          allowDecimals={false}
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#64748b", fontSize: 12 }}
-                        />
-                        <YAxis
-                          dataKey="nome"
-                          type="category"
-                          width={132}
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#64748b", fontSize: 11 }}
-                        />
-                        <Tooltip
-                          cursor={{ fill: "rgba(15, 23, 42, 0.04)" }}
-                          contentStyle={{
-                            backgroundColor: "var(--background)",
-                            border: "1px solid var(--border)",
-                            borderRadius: 6,
-                          }}
-                        />
-                        <Bar
-                          dataKey="total"
-                          name="Agendamentos"
-                          fill="#c2415d"
-                          radius={[0, 4, 4, 0]}
-                          maxBarSize={28}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <ChartEmptyState />
                   )}
                 </CardContent>
               </Card>
             </div>
+
+            <Card>
+              <CardHeader className="flex flex-col items-start gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <CardTitle>Solicitações</CardTitle>
+                <div
+                  aria-label="Filtrar solicitações por status"
+                  className="flex flex-wrap gap-1 rounded-lg border border-border bg-muted/40 p-1"
+                  role="group"
+                >
+                  {filtrosStatus.map((filtro) => (
+                    <Button
+                      key={filtro.value}
+                      type="button"
+                      size="sm"
+                      variant={statusFiltro === filtro.value ? "default" : "ghost"}
+                      aria-pressed={statusFiltro === filtro.value}
+                      onClick={() => setStatusFiltro(filtro.value)}
+                    >
+                      {filtro.label}
+                      <span className="ml-1 tabular-nums">
+                        {contagemPorStatus[filtro.value]}
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Solicitante</TableHead>
+                      <TableHead>Laboratório</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Horário</TableHead>
+                      <TableHead>Finalidade</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {solicitacoesVisiveis.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={6}
+                          className="py-8 text-center text-muted-foreground"
+                        >
+                          {statusFiltro === "todas"
+                            ? "Nenhuma solicitação encontrada."
+                            : statusFiltro === "pendente"
+                              ? "Nenhuma solicitação pendente."
+                              : statusFiltro === "aprovado"
+                                ? "Nenhuma solicitação aprovada."
+                                : "Nenhuma solicitação recusada."}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      solicitacoesVisiveis.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">
+                            {item.usuario?.nome ?? item.usuarioId}
+                          </TableCell>
+                          <TableCell>
+                            {item.laboratorio?.nome ?? "Não informado"}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {formatarData(item.data)}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {item.horaInicio} - {item.horaFim}
+                          </TableCell>
+                          <TableCell
+                            className="max-w-[18rem] truncate"
+                            title={item.finalidade}
+                          >
+                            {item.finalidade}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                item.status === "pendente"
+                                  ? "border-amber-200 bg-amber-50 text-amber-800"
+                                  : item.status === "aprovado"
+                                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                                    : "border-red-200 bg-red-50 text-red-800"
+                              }
+                            >
+                              {item.status === "aprovado"
+                                ? "Aprovada"
+                                : item.status === "recusado"
+                                  ? "Recusada"
+                                  : "Pendente"}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </>
         )}
       </div>
     </AppShell>
-  );
-}
-
-function ChartEmptyState() {
-  return (
-    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-      Sem dados para exibir
-    </div>
   );
 }

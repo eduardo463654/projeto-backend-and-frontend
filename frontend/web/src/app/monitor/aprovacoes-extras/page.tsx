@@ -18,48 +18,25 @@ export default function MonitorAprovacoesPage() {
 
   useEffect(() => {
     let active = true;
-    let refreshing = false;
-    let hasLoaded = false;
 
-    const refresh = async () => {
-      if (!active || refreshing || document.visibilityState === "hidden")
-        return;
-
-      refreshing = true;
-      try {
-        const data = await fetchAgendamentos();
-        if (active) {
-          setAgendamentos(data);
-          setError("");
-        }
-      } catch (reason: unknown) {
-        if (active && !hasLoaded)
+    fetchAgendamentos()
+      .then((data) => {
+        if (active) setAgendamentos(data);
+      })
+      .catch((reason: unknown) => {
+        if (active)
           setError(
             reason instanceof Error
               ? reason.message
               : "Não foi possível carregar a fila.",
           );
-      } finally {
-        refreshing = false;
-        hasLoaded = true;
+      })
+      .finally(() => {
         if (active) setLoading(false);
-      }
-    };
-
-    const refreshWhenVisible = () => {
-      if (document.visibilityState === "visible") void refresh();
-    };
-
-    void refresh();
-    const intervalId = window.setInterval(() => void refresh(), 5000);
-    window.addEventListener("focus", refreshWhenVisible);
-    document.addEventListener("visibilitychange", refreshWhenVisible);
+      });
 
     return () => {
       active = false;
-      window.clearInterval(intervalId);
-      window.removeEventListener("focus", refreshWhenVisible);
-      document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
   }, []);
 
@@ -83,17 +60,18 @@ export default function MonitorAprovacoesPage() {
     }
   };
 
+  const fila = agendamentos.filter(
+    (item) => item.foraDoExpediente && item.status === "pendente",
+  );
+
   return (
-    <AppShell role="monitor" title="Solicitações do laboratório">
+    <AppShell role="monitor" title="Aprovações extras">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-500" /> Solicitações
+            fora do expediente
           </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Monitores decidem solicitações fora do expediente. As demais ficam
-            para aprovação dos professores.
-          </p>
         </CardHeader>
         <CardContent>
           {error && (
@@ -107,69 +85,45 @@ export default function MonitorAprovacoesPage() {
             </p>
           ) : (
             <div className="space-y-3">
-              {agendamentos.map((item) => (
+              {fila.map((item) => (
                 <div
                   key={item.id}
                   className="flex flex-col gap-3 rounded-lg border border-border p-3 md:flex-row md:items-center md:justify-between"
                 >
-                  <div className="min-w-0">
-                    <p className="font-medium">
-                      {item.usuario?.nome ?? "Solicitante"}
-                    </p>
+                  <div>
+                    <p className="font-medium">{item.finalidade}</p>
                     <p className="text-sm text-muted-foreground">
-                      {item.laboratorio?.nome ?? item.laboratorioId}
+                      {item.data} · {item.horaInicio} até {item.horaFim}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      {item.data} · {item.horaInicio} às {item.horaFim}
-                    </p>
-                    <p className="mt-1 text-sm">{item.finalidade}</p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <Badge
-                      className={
-                        item.status === "aprovado"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : item.status === "recusado" ||
-                              item.status === "cancelado"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-amber-100 text-amber-800"
-                      }
-                    >
-                      {item.status === "pendente" && !item.foraDoExpediente
-                        ? "Aguardando professor"
-                        : item.status === "aguardando_confirmacao_cancelamento"
-                          ? "Cancelamento pendente"
-                          : item.status.charAt(0).toUpperCase() +
-                            item.status.slice(1)}
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-amber-100 text-amber-800">
+                      Pendente
                     </Badge>
-                    {item.status === "pendente" && item.foraDoExpediente && (
-                      <>
-                        <Button
-                          variant="success"
-                          size="sm"
-                          disabled={actionId !== null}
-                          onClick={() => decidir(item.id, "aprovado")}
-                        >
-                          <Check className="mr-1 h-4 w-4" /> Aprovar
-                        </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          disabled={actionId !== null}
-                          onClick={() => decidir(item.id, "recusado")}
-                        >
-                          <X className="mr-1 h-4 w-4" /> Recusar
-                        </Button>
-                      </>
-                    )}
+                    <Button
+                      variant="success"
+                      size="sm"
+                      disabled={actionId !== null}
+                      onClick={() => decidir(item.id, "aprovado")}
+                    >
+                      <Check className="mr-1 h-4 w-4" /> Aprovar
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      disabled={actionId !== null}
+                      onClick={() => decidir(item.id, "recusado")}
+                    >
+                      <X className="mr-1 h-4 w-4" /> Recusar
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
           )}
-          {!loading && !error && agendamentos.length === 0 && (
+          {!loading && !error && fila.length === 0 && (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              Não há solicitações registradas.
+              Não há solicitações extras pendentes.
             </p>
           )}
         </CardContent>

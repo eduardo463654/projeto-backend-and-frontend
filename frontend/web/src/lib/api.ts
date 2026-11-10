@@ -2,7 +2,6 @@ const defaultBaseUrl = "http://localhost:3333";
 const ACCESS_TOKEN_KEY = "lab_access_token";
 const REFRESH_TOKEN_KEY = "lab_refresh_token";
 const USER_KEY = "lab_user";
-const SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 
 type TokenResponse = {
   access_token: string;
@@ -29,29 +28,35 @@ export function setAuthSession(
 ) {
   if (typeof window === "undefined") return;
 
-  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
-
-  if (typeof user.role === "string") {
-    document.cookie = `lab_session=${encodeURIComponent(user.role)}; path=/; max-age=${SESSION_MAX_AGE_SECONDS}; SameSite=Lax`;
-  }
+  sessionStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  sessionStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  sessionStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
 export function clearAuthSession() {
   if (typeof window === "undefined") return;
 
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
-  document.cookie = "lab_session=; path=/; max-age=0; SameSite=Lax";
+  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+  sessionStorage.removeItem(USER_KEY);
 }
 
 export function getStoredAccessToken() {
   if (typeof window === "undefined") return null;
 
   try {
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
+    return sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredUser() {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const user = sessionStorage.getItem(USER_KEY);
+    return user ? (JSON.parse(user) as Record<string, unknown>) : null;
   } catch {
     return null;
   }
@@ -61,7 +66,7 @@ function getStoredRefreshToken() {
   if (typeof window === "undefined") return null;
 
   try {
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
+    return sessionStorage.getItem(REFRESH_TOKEN_KEY);
   } catch {
     return null;
   }
@@ -153,7 +158,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export const api = {
   get: <T>(path: string, init?: RequestInit) =>
-    request<T>(path, { ...init, cache: "no-store", method: "GET" }),
+    request<T>(path, { ...init, method: "GET" }),
   post: <T>(path: string, body?: unknown, init?: RequestInit) =>
     request<T>(path, {
       ...init,

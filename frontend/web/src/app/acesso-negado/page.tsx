@@ -4,14 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getStoredUser } from "@/lib/api";
 
 export default function AcessoNegadoPage() {
   const [destination, setDestination] = useState<string | null>(null);
 
   useEffect(() => {
-    const role = decodeURIComponent(
-      document.cookie.match(/(?:^|; )lab_session=([^;]+)/)?.[1] ?? "",
-    );
+    const role = getStoredUser()?.role;
     const dashboardByRole: Record<string, string> = {
       aluno: "/aluno/dashboard",
       professor: "/professor/dashboard",
@@ -20,7 +19,13 @@ export default function AcessoNegadoPage() {
       monitor: "/monitor/aprovacoes-extras",
     };
 
-    setDestination(dashboardByRole[role] ?? "/login");
+    queueMicrotask(() =>
+      setDestination(
+        typeof role === "string"
+          ? dashboardByRole[role] ?? "/login"
+          : "/login",
+      ),
+    );
   }, []);
 
   const hasSession = destination !== null && destination !== "/login";

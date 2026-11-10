@@ -39,11 +39,6 @@ const navItems = {
       label: "Minhas solicitações",
       icon: ClipboardList,
     },
-    {
-      href: "/professor/aprovacoes",
-      label: "Aprovações",
-      icon: ShieldCheck,
-    },
   ],
   admin: [
     { href: "/admin/dashboard", label: "Dashboard", icon: BarChart3 },

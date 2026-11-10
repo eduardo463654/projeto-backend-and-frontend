@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { fetchUsuarios, updateUsuarioRole } from "@/lib/services";
+import { getStoredUser } from "@/lib/api";
 import type { Usuario } from "@/lib/types";
 import { deleteUsuario } from "@/lib/services";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -39,13 +40,12 @@ export default function UsuariosPage() {
   useEffect(() => {
     let active = true;
 
-    try {
-      const storedUser = localStorage.getItem("lab_user");
-      if (storedUser)
-        setCurrentUserId((JSON.parse(storedUser) as { id?: string }).id ?? "");
-    } catch {
-      setCurrentUserId("");
-    }
+    const storedUser = getStoredUser();
+    queueMicrotask(() =>
+      setCurrentUserId(
+        typeof storedUser?.id === "string" ? storedUser.id : "",
+      ),
+    );
 
     fetchUsuarios()
       .then((data) => {

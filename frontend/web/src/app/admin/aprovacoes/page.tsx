@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, Clock3, X } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -26,49 +26,25 @@ export default function AprovacoesPage() {
 
   useEffect(() => {
     let active = true;
-    let refreshing = false;
-    let hasLoaded = false;
 
-    const refresh = async () => {
-      if (!active || refreshing || document.visibilityState === "hidden") {
-        return;
-      }
-
-      refreshing = true;
-      try {
-        const data = await fetchAgendamentos();
-        if (active) {
-          setAgendamentos(data);
-          setError("");
-        }
-      } catch (reason: unknown) {
-        if (active && !hasLoaded)
+    fetchAgendamentos()
+      .then((data) => {
+        if (active) setAgendamentos(data);
+      })
+      .catch((reason: unknown) => {
+        if (active)
           setError(
             reason instanceof Error
               ? reason.message
               : "Não foi possível carregar a fila.",
           );
-      } finally {
-        refreshing = false;
-        hasLoaded = true;
+      })
+      .finally(() => {
         if (active) setLoading(false);
-      }
-    };
-
-    const refreshWhenVisible = () => {
-      if (document.visibilityState === "visible") void refresh();
-    };
-
-    void refresh();
-    const intervalId = window.setInterval(() => void refresh(), 5000);
-    window.addEventListener("focus", refreshWhenVisible);
-    document.addEventListener("visibilitychange", refreshWhenVisible);
+      });
 
     return () => {
       active = false;
-      window.clearInterval(intervalId);
-      window.removeEventListener("focus", refreshWhenVisible);
-      document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
   }, []);
 
@@ -91,6 +67,18 @@ export default function AprovacoesPage() {
       setActionId(null);
     }
   };
+
+  const pendentes = useMemo(
+    () =>
+      agendamentos
+        .filter((item) => item.status === "pendente")
+        .sort(
+          (first, second) =>
+            first.data.localeCompare(second.data) ||
+            first.horaInicio.localeCompare(second.horaInicio),
+        ),
+    [agendamentos],
+  );
 
   return (
     <AppShell role="admin" title="Aprovações">
@@ -115,31 +103,45 @@ export default function AprovacoesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Usuário</TableHead>
+                  <TableHead>Laboratório</TableHead>
                   <TableHead>Data</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Horário</TableHead>
+                  <TableHead>Modalidade</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {agendamentos
-                  .filter((item) => item.status === "pendente")
-                  .map((item) => (
+                {pendentes.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="py-8 text-center text-muted-foreground"
+                    >
+                      Não há solicitações pendentes.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  pendentes.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell>
                         {item.usuario?.nome ?? item.usuarioId}
                       </TableCell>
-                      <TableCell>{item.data}</TableCell>
-                      <TableCell>{item.ehEad ? "EAD" : "Normal"}</TableCell>
+                      <TableCell>
+                        {item.laboratorio?.nome ?? "Laboratório não informado"}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">{item.data}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {item.horaInicio} - {item.horaFim}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           className={
                             item.ehEad
                               ? "bg-violet-100 text-violet-800"
-                              : "bg-amber-100 text-amber-800"
+                              : "bg-muted text-muted-foreground"
                           }
                         >
-                          {item.status}
+                          {item.ehEad ? "EAD" : "Presencial"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -163,17 +165,11 @@ export default function AprovacoesPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ))
+                )}
               </TableBody>
             </Table>
           )}
-          {!loading &&
-            !error &&
-            agendamentos.every((item) => item.status !== "pendente") && (
-              <p className="py-6 text-center text-sm text-muted-foreground">
-                Não há solicitações pendentes.
-              </p>
-            )}
         </CardContent>
       </Card>
     </AppShell>

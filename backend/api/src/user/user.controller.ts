@@ -30,9 +30,9 @@ export class UserController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createUserDto: CreateUserDto) {
-    if (!['aluno', 'professor', 'monitor'].includes(createUserDto.role)) {
+    if (!['aluno', 'professor'].includes(createUserDto.role)) {
       throw new BadRequestException(
-        'O cadastro público permite apenas aluno, professor ou monitor.',
+        'O cadastro público permite apenas aluno ou professor.',
       );
     }
 
