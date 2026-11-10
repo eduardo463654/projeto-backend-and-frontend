@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { AppShell } from "@/components/layout/app-shell";
 import { fetchMeusAgendamentos } from "@/lib/services";
+import { usePolling } from "@/lib/use-polling";
 import type { Agendamento } from "@/lib/types";
 
 export default function MinhasSolicitacoesAlunoPage() {
@@ -43,6 +44,8 @@ export default function MinhasSolicitacoesAlunoPage() {
       active = false;
     };
   }, []);
+
+  usePolling(fetchMeusAgendamentos, setAgendamentos);
 
   return (
     <AppShell role="aluno" title="Minhas solicitações">

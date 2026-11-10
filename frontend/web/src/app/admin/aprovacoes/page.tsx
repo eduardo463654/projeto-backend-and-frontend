@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { fetchAgendamentos, updateAgendamentoStatus } from "@/lib/services";
+import { usePolling } from "@/lib/use-polling";
 import type { Agendamento } from "@/lib/types";
 
 export default function AprovacoesPage() {
@@ -47,6 +48,8 @@ export default function AprovacoesPage() {
       active = false;
     };
   }, []);
+
+  usePolling(fetchAgendamentos, setAgendamentos);
 
   const decidir = async (id: string, status: "aprovado" | "recusado") => {
     setActionId(id);

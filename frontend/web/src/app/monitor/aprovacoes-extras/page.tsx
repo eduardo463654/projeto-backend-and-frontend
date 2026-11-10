@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchAgendamentos, updateAgendamentoStatus } from "@/lib/services";
+import { usePolling } from "@/lib/use-polling";
 import type { Agendamento } from "@/lib/types";
 
 export default function MonitorAprovacoesPage() {
@@ -39,6 +40,8 @@ export default function MonitorAprovacoesPage() {
       active = false;
     };
   }, []);
+
+  usePolling(fetchAgendamentos, setAgendamentos);
 
   const decidir = async (id: string, status: "aprovado" | "recusado") => {
     setActionId(id);

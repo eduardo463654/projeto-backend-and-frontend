@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchMeusAgendamentos, fetchLaboratorios } from "@/lib/services";
+import { usePolling } from "@/lib/use-polling";
 import type { Agendamento, Laboratorio } from "@/lib/types";
 
 export default function AlunoDashboardPage() {
@@ -48,6 +49,8 @@ export default function AlunoDashboardPage() {
       active = false;
     };
   }, []);
+
+  usePolling(fetchMeusAgendamentos, setAgendamentos);
 
   const pendentes = useMemo(
     () =>

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fetchAgendamentos, fetchLaboratorios } from "@/lib/services";
+import { usePolling } from "@/lib/use-polling";
 import type { Agendamento, Laboratorio } from "@/lib/types";
 
 function mondayOf(date: Date) {
@@ -64,6 +65,8 @@ export default function CalendarioAdminPage() {
       active = false;
     };
   }, []);
+
+  usePolling(fetchAgendamentos, setAgendamentos);
 
   const days = useMemo(
     () =>

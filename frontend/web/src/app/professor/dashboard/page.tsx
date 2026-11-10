@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { fetchMeusAgendamentos } from "@/lib/services";
+import { usePolling } from "@/lib/use-polling";
 import type { Agendamento } from "@/lib/types";
 
 export default function ProfessorDashboardPage() {
@@ -40,6 +41,8 @@ export default function ProfessorDashboardPage() {
       active = false;
     };
   }, []);
+
+  usePolling(fetchMeusAgendamentos, setAgendamentos);
 
   const aprovados = useMemo(
     () => agendamentos.filter((item) => item.status === "aprovado").slice(0, 3),

@@ -29,6 +29,7 @@ import {
   fetchLaboratorios,
   fetchUsuarios,
 } from "@/lib/services";
+import { usePolling } from "@/lib/use-polling";
 import type { Agendamento, Laboratorio, Usuario } from "@/lib/types";
 
 type StatusFiltro = "todas" | "pendente" | "aprovado" | "recusado";
@@ -93,6 +94,8 @@ export default function AdminDashboardPage() {
       active = false;
     };
   }, []);
+
+  usePolling(fetchAgendamentos, setAgendamentos);
 
   const pendentes = useMemo(
     () => agendamentos.filter((item) => item.status === "pendente").length,

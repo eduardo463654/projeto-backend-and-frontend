@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { fetchMeusAgendamentos } from "@/lib/services";
+import { usePolling } from "@/lib/use-polling";
 import type { Agendamento } from "@/lib/types";
 
 export default function MinhasSolicitacoesProfessorPage() {
@@ -43,6 +44,8 @@ export default function MinhasSolicitacoesProfessorPage() {
       active = false;
     };
   }, []);
+
+  usePolling(fetchMeusAgendamentos, setAgendamentos);
 
   return (
     <AppShell role="professor" title="Minhas solicitações">
