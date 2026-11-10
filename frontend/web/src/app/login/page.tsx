@@ -80,7 +80,7 @@ export default function LoginPage() {
                 LABORATÓRIO FAP
               </div>
               <Image
-                src="/fap-logo.svg"
+                src="/fap-logo.svg?v=3"
                 alt="Faculdade Adventista do Paraná"
                 width={256}
                 height={256}

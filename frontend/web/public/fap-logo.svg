@@ -1,14 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
   <title id="title">Faculdade Adventista do Paraná</title>
-  <rect width="256" height="256" fill="#050505"/>
-  <g fill="#fff">
-    <path d="m104 22 31-1-26 53-32 19 10-21 13-7z"/>
-    <path d="m139 23 17 2 29 60-18 12-36-58z"/>
-    <path d="M78 77c22-20 48-18 82-42l13 9c-29 25-57 28-86 48z"/>
-    <path d="M72 91c26-22 55-20 95-48l13 10c-33 27-66 32-101 52z"/>
-    <path d="M77 106c27-21 59-20 100-48l11 11c-35 27-69 33-102 52z"/>
-    <text x="128" y="151" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700">Faculdade</text>
-    <text x="128" y="184" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700">Adventista</text>
-    <text x="128" y="211" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="6">DO PARANÁ</text>
+  <rect width="256" height="256" fill="#fff"/>
+  <g fill="#003f73" fill-rule="evenodd">
+    <path d="M8 187 66 18h57l27 0 62 137c15-9 25-20 30-34 8 21-1 38-20 51-13 9-27 15-44 19l-20 5-17-48H91l-17 42-66-3Zm109-134-29 82h65l-25-82h-11Z"/>
+  </g>
+  <g fill="none" stroke="#fff" stroke-linecap="round" stroke-width="8">
+    <path d="M26 133c39-36 82-35 125-49 29-10 51-24 70-43"/>
+    <path d="M18 154c42-39 87-38 132-53 32-11 56-26 77-46"/>
+    <path d="M11 175c45-41 92-41 139-57 35-12 61-28 84-49"/>
+  </g>
+  <g fill="#003f73" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">
+    <text x="128" y="211" font-size="24">Faculdade</text>
+    <text x="128" y="234" font-size="24">Adventista</text>
+    <text x="128" y="252" font-size="10" letter-spacing="3.5">DO PARANÁ</text>
   </g>
 </svg>
