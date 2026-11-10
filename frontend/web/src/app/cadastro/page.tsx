@@ -157,7 +157,10 @@ export default function CadastroPage() {
                 placeholder="Informe seu RA"
               />
               {form.formState.errors.ra && (
-                <p role="alert" className="flex items-center gap-2 text-sm text-red-600">
+                <p
+                  role="alert"
+                  className="flex items-center gap-2 text-sm text-red-600"
+                >
                   <AlertCircle className="h-4 w-4" />
                   {String(form.formState.errors.ra.message)}
                 </p>
@@ -179,7 +182,9 @@ export default function CadastroPage() {
                   variant="ghost"
                   size="icon"
                   className="absolute right-0 top-0 h-10 w-10 text-muted-foreground shadow-none"
-                  aria-label={passwordVisible ? "Ocultar senha" : "Mostrar senha"}
+                  aria-label={
+                    passwordVisible ? "Ocultar senha" : "Mostrar senha"
+                  }
                   aria-pressed={passwordVisible}
                   onClick={() => setPasswordVisible((visible) => !visible)}
                 >

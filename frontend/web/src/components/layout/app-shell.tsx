@@ -38,7 +38,8 @@ export function AppShell({
       return;
     }
 
-    const roleMatches = userRole === role || (role === "professor" && userRole === "funcionario");
+    const roleMatches =
+      userRole === role || (role === "professor" && userRole === "funcionario");
     if (!roleMatches) {
       router.replace("/acesso-negado");
       return;

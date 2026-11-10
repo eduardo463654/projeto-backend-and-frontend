@@ -118,9 +118,7 @@ export default function AdminDashboardPage() {
             item.status === "aprovado" ||
             item.status === "recusado",
         )
-        .sort((first, second) =>
-          second.criadoEm.localeCompare(first.criadoEm),
-        ),
+        .sort((first, second) => second.criadoEm.localeCompare(first.criadoEm)),
     [agendamentos],
   );
 
@@ -141,36 +139,38 @@ export default function AdminDashboardPage() {
 
   const aprovacoesPorLaboratorio = useMemo(
     () =>
-      laboratorios.map((laboratorio) => ({
-        nome: laboratorio.nome,
-        total: agendamentos.filter(
-          (item) =>
-            item.laboratorioId === laboratorio.id &&
-            item.status === "aprovado",
-        ).length,
-      }))
+      laboratorios
+        .map((laboratorio) => ({
+          nome: laboratorio.nome,
+          total: agendamentos.filter(
+            (item) =>
+              item.laboratorioId === laboratorio.id &&
+              item.status === "aprovado",
+          ).length,
+        }))
         .filter((laboratorio) => laboratorio.total > 0)
         .sort((first, second) => second.total - first.total),
     [agendamentos, laboratorios],
   );
 
   const usoPorTipo = useMemo(
-    () => [
-      {
-        nome: "Aluno",
-        valor: usuarios.filter((usuario) => usuario.tipo === "aluno").length,
-      },
-      {
-        nome: "Professor",
-        valor: usuarios.filter((usuario) => usuario.tipo === "professor")
-          .length,
-      },
-      {
-        nome: "Funcionário",
-        valor: usuarios.filter((usuario) => usuario.tipo === "funcionario")
-          .length,
-      },
-    ].filter((item) => item.valor > 0),
+    () =>
+      [
+        {
+          nome: "Aluno",
+          valor: usuarios.filter((usuario) => usuario.tipo === "aluno").length,
+        },
+        {
+          nome: "Professor",
+          valor: usuarios.filter((usuario) => usuario.tipo === "professor")
+            .length,
+        },
+        {
+          nome: "Funcionário",
+          valor: usuarios.filter((usuario) => usuario.tipo === "funcionario")
+            .length,
+        },
+      ].filter((item) => item.valor > 0),
     [usuarios],
   );
 
@@ -223,13 +223,60 @@ export default function AdminDashboardPage() {
                     </p>
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={aprovacoesPorLaboratorio} layout="vertical" margin={{ top: 4, right: 28, left: 8, bottom: 4 }}>
-                        <CartesianGrid horizontal={false} stroke="var(--border)" strokeDasharray="3 3" />
-                        <XAxis type="number" allowDecimals={false} domain={[0, "dataMax + 1"]} axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
-                        <YAxis dataKey="nome" type="category" width={132} axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
-                        <Tooltip cursor={{ fill: "var(--muted)", opacity: 0.55 }} contentStyle={{ backgroundColor: "var(--popover)", borderColor: "var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }} />
-                        <Bar dataKey="total" name="Aprovações" fill="var(--success)" radius={[0, 5, 5, 0]} maxBarSize={28}>
-                          <LabelList dataKey="total" position="right" fill="var(--muted-foreground)" fontSize={11} />
+                      <BarChart
+                        data={aprovacoesPorLaboratorio}
+                        layout="vertical"
+                        margin={{ top: 4, right: 28, left: 8, bottom: 4 }}
+                      >
+                        <CartesianGrid
+                          horizontal={false}
+                          stroke="var(--border)"
+                          strokeDasharray="3 3"
+                        />
+                        <XAxis
+                          type="number"
+                          allowDecimals={false}
+                          domain={[0, "dataMax + 1"]}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{
+                            fill: "var(--muted-foreground)",
+                            fontSize: 12,
+                          }}
+                        />
+                        <YAxis
+                          dataKey="nome"
+                          type="category"
+                          width={132}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{
+                            fill: "var(--muted-foreground)",
+                            fontSize: 11,
+                          }}
+                        />
+                        <Tooltip
+                          cursor={{ fill: "var(--muted)", opacity: 0.55 }}
+                          contentStyle={{
+                            backgroundColor: "var(--popover)",
+                            borderColor: "var(--border)",
+                            borderRadius: 8,
+                            color: "var(--popover-foreground)",
+                          }}
+                        />
+                        <Bar
+                          dataKey="total"
+                          name="Aprovações"
+                          fill="var(--success)"
+                          radius={[0, 5, 5, 0]}
+                          maxBarSize={28}
+                        >
+                          <LabelList
+                            dataKey="total"
+                            position="right"
+                            fill="var(--muted-foreground)"
+                            fontSize={11}
+                          />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -253,12 +300,55 @@ export default function AdminDashboardPage() {
                         layout="vertical"
                         margin={{ top: 4, right: 28, left: 8, bottom: 4 }}
                       >
-                        <CartesianGrid horizontal={false} stroke="var(--border)" strokeDasharray="3 3" />
-                        <XAxis type="number" allowDecimals={false} domain={[0, "dataMax + 1"]} axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
-                        <YAxis dataKey="nome" type="category" width={100} axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
-                        <Tooltip cursor={{ fill: "var(--muted)", opacity: 0.55 }} contentStyle={{ backgroundColor: "var(--popover)", borderColor: "var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }} />
-                        <Bar dataKey="valor" name="Usuários" fill="var(--primary)" radius={[0, 5, 5, 0]} maxBarSize={32}>
-                          <LabelList dataKey="valor" position="right" fill="var(--muted-foreground)" fontSize={11} />
+                        <CartesianGrid
+                          horizontal={false}
+                          stroke="var(--border)"
+                          strokeDasharray="3 3"
+                        />
+                        <XAxis
+                          type="number"
+                          allowDecimals={false}
+                          domain={[0, "dataMax + 1"]}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{
+                            fill: "var(--muted-foreground)",
+                            fontSize: 12,
+                          }}
+                        />
+                        <YAxis
+                          dataKey="nome"
+                          type="category"
+                          width={100}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{
+                            fill: "var(--muted-foreground)",
+                            fontSize: 12,
+                          }}
+                        />
+                        <Tooltip
+                          cursor={{ fill: "var(--muted)", opacity: 0.55 }}
+                          contentStyle={{
+                            backgroundColor: "var(--popover)",
+                            borderColor: "var(--border)",
+                            borderRadius: 8,
+                            color: "var(--popover-foreground)",
+                          }}
+                        />
+                        <Bar
+                          dataKey="valor"
+                          name="Usuários"
+                          fill="var(--primary)"
+                          radius={[0, 5, 5, 0]}
+                          maxBarSize={32}
+                        >
+                          <LabelList
+                            dataKey="valor"
+                            position="right"
+                            fill="var(--muted-foreground)"
+                            fontSize={11}
+                          />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -280,7 +370,9 @@ export default function AdminDashboardPage() {
                       key={filtro.value}
                       type="button"
                       size="sm"
-                      variant={statusFiltro === filtro.value ? "default" : "ghost"}
+                      variant={
+                        statusFiltro === filtro.value ? "default" : "ghost"
+                      }
                       aria-pressed={statusFiltro === filtro.value}
                       onClick={() => setStatusFiltro(filtro.value)}
                     >

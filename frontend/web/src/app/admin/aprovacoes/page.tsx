@@ -129,7 +129,9 @@ export default function AprovacoesPage() {
                       <TableCell>
                         {item.laboratorio?.nome ?? "Laboratório não informado"}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">{item.data}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {item.data}
+                      </TableCell>
                       <TableCell className="whitespace-nowrap">
                         {item.horaInicio} - {item.horaFim}
                       </TableCell>

@@ -5,19 +5,18 @@ export const loginSchema = z.object({
   senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres."),
 });
 
-export const cadastroSchema = z
-  .object({
-    nome: z.string().min(2, "Informe o nome completo."),
-    email: z.string().email("Informe um e-mail válido."),
-    telefone: z.string().min(10, "Telefone inválido."),
-    tipo: z.enum(["aluno", "professor"]),
-    ra: z
-      .string()
-      .trim()
-      .min(6, "Informe um RA de 6 a 7 caracteres.")
-      .max(7, "Informe um RA de 6 a 7 caracteres."),
-    senha: z.string().min(8, "A senha deve ter ao menos 8 caracteres."),
-  });
+export const cadastroSchema = z.object({
+  nome: z.string().min(2, "Informe o nome completo."),
+  email: z.string().email("Informe um e-mail válido."),
+  telefone: z.string().min(10, "Telefone inválido."),
+  tipo: z.enum(["aluno", "professor"]),
+  ra: z
+    .string()
+    .trim()
+    .min(6, "Informe um RA de 6 a 7 caracteres.")
+    .max(7, "Informe um RA de 6 a 7 caracteres."),
+  senha: z.string().min(8, "A senha deve ter ao menos 8 caracteres."),
+});
 
 export const agendamentoAlunoSchema = z.object({
   laboratorioId: z.string().min(1, "Selecione um laboratório."),

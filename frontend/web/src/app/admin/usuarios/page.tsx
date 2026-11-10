@@ -42,9 +42,7 @@ export default function UsuariosPage() {
 
     const storedUser = getStoredUser();
     queueMicrotask(() =>
-      setCurrentUserId(
-        typeof storedUser?.id === "string" ? storedUser.id : "",
-      ),
+      setCurrentUserId(typeof storedUser?.id === "string" ? storedUser.id : ""),
     );
 
     fetchUsuarios()

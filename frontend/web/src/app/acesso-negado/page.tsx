@@ -22,7 +22,7 @@ export default function AcessoNegadoPage() {
     queueMicrotask(() =>
       setDestination(
         typeof role === "string"
-          ? dashboardByRole[role] ?? "/login"
+          ? (dashboardByRole[role] ?? "/login")
           : "/login",
       ),
     );
