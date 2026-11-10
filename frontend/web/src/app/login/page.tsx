@@ -71,7 +71,7 @@ export default function LoginPage() {
 
   return (
     <div className="auth-page-background flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-[32px] border border-white/10 bg-white/10 shadow-[0_30px_80px_rgba(15,23,42,0.35)] backdrop-blur-xl md:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-[32px] border border-white/10 bg-white/10 shadow-[0_30px_80px_rgba(15,23,42,0.35)] backdrop-blur-xl md:grid-cols-[1.15fr_0.85fr]">
         <div className="flex flex-col justify-between bg-[linear-gradient(135deg,#0f172a,#0d3b8c_55%,#1d4ed8)] p-8 text-white">
           <div>
             <div className="mb-8 flex min-w-0 items-center justify-between gap-3 sm:mb-10">
@@ -80,12 +80,12 @@ export default function LoginPage() {
                 LABORATÓRIO FAP
               </div>
               <Image
-                src="/fap-logo-horizontal.svg"
+                src="/fap-logo.svg"
                 alt="Faculdade Adventista do Paraná"
-                width={180}
-                height={54}
+                width={256}
+                height={256}
                 priority
-                className="h-auto w-[104px] shrink-0 sm:w-[150px]"
+                className="h-auto w-[88px] shrink-0 rounded-lg shadow-lg sm:w-28"
               />
             </div>
             <h1 className="max-w-xs text-4xl font-bold leading-tight tracking-tight">
