@@ -131,7 +131,9 @@ export default function CalendarioAdminPage() {
           item.status !== "cancelado" &&
           item.status !== "recusado",
       )
-      .sort((first, second) => first.horaInicio.localeCompare(second.horaInicio));
+      .sort((first, second) =>
+        first.horaInicio.localeCompare(second.horaInicio),
+      );
 
     return (
       <section
@@ -258,7 +260,9 @@ export default function CalendarioAdminPage() {
               type="button"
               variant="outline"
               size="icon"
-              aria-label={viewMode === "week" ? "Semana anterior" : "Mês anterior"}
+              aria-label={
+                viewMode === "week" ? "Semana anterior" : "Mês anterior"
+              }
               onClick={() => movePeriod(-1)}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -274,7 +278,9 @@ export default function CalendarioAdminPage() {
               type="button"
               variant="outline"
               size="icon"
-              aria-label={viewMode === "week" ? "Próxima semana" : "Próximo mês"}
+              aria-label={
+                viewMode === "week" ? "Próxima semana" : "Próximo mês"
+              }
               onClick={() => movePeriod(1)}
             >
               <ChevronRight className="h-4 w-4" />
