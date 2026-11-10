@@ -30,11 +30,14 @@ function dateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+const weekdays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
 export default function CalendarioAdminPage() {
   const [laboratorios, setLaboratorios] = useState<Laboratorio[]>([]);
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [laboratorioId, setLaboratorioId] = useState("");
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()));
+  const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [selectedBooking, setSelectedBooking] = useState<Agendamento | null>(
     null,
   );
@@ -80,26 +83,183 @@ export default function CalendarioAdminPage() {
     [weekStart],
   );
 
+  const monthDays = useMemo(() => {
+    const firstOfMonth = new Date(
+      weekStart.getFullYear(),
+      weekStart.getMonth(),
+      1,
+    );
+    const firstDay = mondayOf(firstOfMonth);
+
+    return Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(firstDay);
+      date.setDate(firstDay.getDate() + index);
+      return date;
+    });
+  }, [weekStart]);
+
   const weekLabel = `${days[0]?.toLocaleDateString("pt-BR")} – ${days[6]?.toLocaleDateString("pt-BR")}`;
+  const monthLabel = new Intl.DateTimeFormat("pt-BR", {
+    month: "long",
+    year: "numeric",
+  }).format(weekStart);
+
+  const movePeriod = (direction: -1 | 1) => {
+    setWeekStart((date) => {
+      const next = new Date(date);
+      if (viewMode === "month") {
+        next.setDate(1);
+        next.setMonth(next.getMonth() + direction);
+        return mondayOf(next);
+      }
+
+      next.setDate(next.getDate() + direction * 7);
+      return next;
+    });
+  };
+
+  const renderDay = (date: Date, compact = false) => {
+    const key = dateKey(date);
+    const isToday = key === dateKey(new Date());
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    const isOutsideMonth = compact && date.getMonth() !== weekStart.getMonth();
+    const dayBookings = agendamentos
+      .filter(
+        (item) =>
+          item.laboratorioId === laboratorioId &&
+          item.data === key &&
+          item.status !== "cancelado" &&
+          item.status !== "recusado",
+      )
+      .sort((first, second) => first.horaInicio.localeCompare(second.horaInicio));
+
+    return (
+      <section
+        key={key}
+        aria-current={isToday ? "date" : undefined}
+        className={`rounded-lg border p-3 transition-colors ${
+          compact ? "min-h-32" : "min-h-48"
+        } ${
+          isOutsideMonth
+            ? "border-border/50 bg-muted/10 text-muted-foreground"
+            : isToday
+              ? "border-primary/50 bg-primary/5 shadow-sm"
+              : isWeekend
+                ? "border-border bg-muted/45"
+                : "border-border bg-muted/20"
+        }`}
+      >
+        <div className="mb-3 flex min-h-8 items-start justify-between gap-2">
+          <div>
+            <h2
+              className={`text-sm font-semibold capitalize ${
+                isToday ? "text-primary" : "text-foreground"
+              }`}
+            >
+              {compact
+                ? date.toLocaleDateString("pt-BR", { day: "2-digit" })
+                : date.toLocaleDateString("pt-BR", {
+                    weekday: "short",
+                    day: "2-digit",
+                    month: "short",
+                  })}
+            </h2>
+            {!compact && isToday && (
+              <span className="mt-0.5 block text-[10px] font-medium uppercase text-primary">
+                Hoje
+              </span>
+            )}
+          </div>
+          {dayBookings.length > 0 && (
+            <Badge className="shrink-0 border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
+              {compact
+                ? dayBookings.length
+                : `${dayBookings.length} reserva${dayBookings.length === 1 ? "" : "s"}`}
+            </Badge>
+          )}
+        </div>
+        {dayBookings.length ? (
+          <div className="space-y-2">
+            {dayBookings.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                aria-label={`Ver agendamento de ${item.usuario?.nome ?? "usuário"}, ${item.horaInicio} a ${item.horaFim}`}
+                onClick={() => setSelectedBooking(item)}
+                className={`w-full rounded-md border border-l-4 bg-card p-2 text-left text-xs shadow-sm transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  item.status === "aprovado"
+                    ? "border-l-emerald-500"
+                    : "border-l-amber-500"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-1">
+                  <p className="font-semibold tabular-nums">
+                    {item.horaInicio}–{item.horaFim}
+                  </p>
+                  <Badge
+                    className={`${getStatusColor(item.status)} shrink-0 px-1.5 py-0 text-[9px] capitalize`}
+                  >
+                    {item.status}
+                  </Badge>
+                </div>
+                <p className="mt-1 truncate">
+                  {item.usuario?.nome ?? item.finalidade}
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  {item.computadorId
+                    ? `· ${item.computadorId}`
+                    : "· laboratório"}
+                </p>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">Sem reservas</p>
+        )}
+      </section>
+    );
+  };
 
   return (
     <AppShell role="admin" title="Calendário administrativo">
       <Card>
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <CardTitle>Calendário da semana · {weekLabel}</CardTitle>
+          <CardTitle>
+            {viewMode === "week"
+              ? `Calendário da semana · ${weekLabel}`
+              : `Calendário · ${monthLabel}`}
+          </CardTitle>
           <div className="flex flex-wrap items-center gap-2">
+            <div
+              aria-label="Visualização do calendário"
+              className="flex rounded-lg border border-border bg-muted/40 p-1"
+              role="group"
+            >
+              <Button
+                type="button"
+                size="sm"
+                variant={viewMode === "week" ? "default" : "ghost"}
+                aria-pressed={viewMode === "week"}
+                onClick={() => setViewMode("week")}
+              >
+                Semana
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={viewMode === "month" ? "default" : "ghost"}
+                aria-pressed={viewMode === "month"}
+                onClick={() => setViewMode("month")}
+              >
+                Mês
+              </Button>
+            </div>
             <Button
               type="button"
               variant="outline"
               size="icon"
-              aria-label="Semana anterior"
-              onClick={() =>
-                setWeekStart((date) => {
-                  const next = new Date(date);
-                  next.setDate(next.getDate() - 7);
-                  return next;
-                })
-              }
+              aria-label={viewMode === "week" ? "Semana anterior" : "Mês anterior"}
+              onClick={() => movePeriod(-1)}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -114,14 +274,8 @@ export default function CalendarioAdminPage() {
               type="button"
               variant="outline"
               size="icon"
-              aria-label="Próxima semana"
-              onClick={() =>
-                setWeekStart((date) => {
-                  const next = new Date(date);
-                  next.setDate(next.getDate() + 7);
-                  return next;
-                })
-              }
+              aria-label={viewMode === "week" ? "Próxima semana" : "Próximo mês"}
+              onClick={() => movePeriod(1)}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -149,101 +303,24 @@ export default function CalendarioAdminPage() {
             <p className="text-sm text-muted-foreground">
               Carregando calendário...
             </p>
-          ) : (
+          ) : viewMode === "week" ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-              {days.map((date) => {
-                const isToday = dateKey(date) === dateKey(new Date());
-                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                const dayBookings = agendamentos
-                  .filter(
-                    (item) =>
-                      item.laboratorioId === laboratorioId &&
-                      item.data === dateKey(date) &&
-                      item.status !== "cancelado" &&
-                      item.status !== "recusado",
-                  )
-                  .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
-                return (
-                  <section
-                    key={dateKey(date)}
-                    aria-current={isToday ? "date" : undefined}
-                    className={`min-h-48 rounded-lg border p-3 transition-colors ${
-                      isToday
-                        ? "border-primary/50 bg-primary/5 shadow-sm"
-                        : isWeekend
-                          ? "border-border bg-muted/45"
-                          : "border-border bg-muted/20"
-                    }`}
-                  >
-                    <div className="mb-3 flex min-h-8 items-start justify-between gap-2">
-                      <div>
-                        <h2
-                          className={`text-sm font-semibold capitalize ${
-                            isToday ? "text-primary" : "text-foreground"
-                          }`}
-                        >
-                          {date.toLocaleDateString("pt-BR", {
-                            weekday: "short",
-                            day: "2-digit",
-                            month: "short",
-                          })}
-                        </h2>
-                        {isToday && (
-                          <span className="mt-0.5 block text-[10px] font-medium uppercase text-primary">
-                            Hoje
-                          </span>
-                        )}
-                      </div>
-                      {dayBookings.length > 0 && (
-                        <Badge className="shrink-0 border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
-                          {dayBookings.length} reserva
-                          {dayBookings.length === 1 ? "" : "s"}
-                        </Badge>
-                      )}
+              {days.map((date) => renderDay(date))}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <div className="min-w-[840px]">
+                <div className="mb-2 grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase text-muted-foreground">
+                  {weekdays.map((day) => (
+                    <div key={day} className="py-2">
+                      {day}
                     </div>
-                    {dayBookings.length ? (
-                      <div className="space-y-2">
-                        {dayBookings.map((item) => (
-                          <button
-                            key={item.id}
-                            type="button"
-                            aria-label={`Ver agendamento de ${item.usuario?.nome ?? "usuário"}, ${item.horaInicio} a ${item.horaFim}`}
-                            onClick={() => setSelectedBooking(item)}
-                            className={`w-full rounded-md border border-l-4 bg-card p-2 text-left text-xs shadow-sm transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                              item.status === "aprovado"
-                                ? "border-l-emerald-500"
-                                : "border-l-amber-500"
-                            }`}
-                          >
-                            <div className="flex items-start justify-between gap-1">
-                              <p className="font-semibold tabular-nums">
-                                {item.horaInicio}–{item.horaFim}
-                              </p>
-                              <Badge
-                                className={`${getStatusColor(item.status)} shrink-0 px-1.5 py-0 text-[9px] capitalize`}
-                              >
-                                {item.status}
-                              </Badge>
-                            </div>
-                            <p className="mt-1 truncate">
-                              {item.usuario?.nome ?? item.finalidade}
-                            </p>
-                            <p className="mt-1 text-muted-foreground">
-                              {item.computadorId
-                                ? `· ${item.computadorId}`
-                                : "· laboratório"}
-                            </p>
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        Sem reservas
-                      </p>
-                    )}
-                  </section>
-                );
-              })}
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-2">
+                  {monthDays.map((date) => renderDay(date, true))}
+                </div>
+              </div>
             </div>
           )}
         </CardContent>
