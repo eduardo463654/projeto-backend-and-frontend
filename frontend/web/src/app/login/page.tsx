@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -73,9 +74,19 @@ export default function LoginPage() {
       <div className="grid w-full max-w-5xl overflow-hidden rounded-[32px] border border-white/10 bg-white/10 shadow-[0_30px_80px_rgba(15,23,42,0.35)] backdrop-blur-xl md:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col justify-between bg-[linear-gradient(135deg,#0f172a,#0d3b8c_55%,#1d4ed8)] p-8 text-white">
           <div>
-            <div className="mb-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.22em] text-blue-100">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              LABORATÓRIO FAP
+            <div className="mb-8 flex min-w-0 items-center justify-between gap-3 sm:mb-10">
+              <div className="inline-flex min-w-0 items-center gap-2 whitespace-nowrap rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-blue-100">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                LABORATÓRIO FAP
+              </div>
+              <Image
+                src="/fap-logo-horizontal.svg"
+                alt="Faculdade Adventista do Paraná"
+                width={180}
+                height={54}
+                priority
+                className="h-auto w-[104px] shrink-0 sm:w-[150px]"
+              />
             </div>
             <h1 className="max-w-xs text-4xl font-bold leading-tight tracking-tight">
               Gestão inteligente do laboratório.
