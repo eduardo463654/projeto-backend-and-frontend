@@ -72,21 +72,22 @@ export default function LoginPage() {
   return (
     <div className="auth-page-background flex min-h-screen items-center justify-center px-4 py-10">
       <div className="grid w-full max-w-5xl overflow-hidden rounded-[32px] border border-white/10 bg-white/10 shadow-[0_30px_80px_rgba(15,23,42,0.35)] backdrop-blur-xl md:grid-cols-[1.15fr_0.85fr]">
-        <div className="flex flex-col justify-between bg-[linear-gradient(135deg,#0f172a,#0d3b8c_55%,#1d4ed8)] p-8 text-white">
-          <div>
-            <div className="mb-8 flex min-w-0 items-center justify-between gap-3 sm:mb-10">
+        <div className="relative isolate flex flex-col justify-between overflow-hidden bg-[linear-gradient(135deg,#0f172a,#0d3b8c_55%,#1d4ed8)] p-8 text-white">
+          <Image
+            src="/fap-logo.svg?v=7"
+            alt=""
+            aria-hidden="true"
+            width={256}
+            height={256}
+            priority
+            className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-auto w-[min(76%,400px)] -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.18]"
+          />
+          <div className="relative z-10">
+            <div className="mb-8 flex min-w-0 items-center gap-3 sm:mb-10">
               <div className="inline-flex min-w-0 items-center gap-2 whitespace-nowrap rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-blue-100">
                 <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
                 LABORATÓRIO FAP
               </div>
-              <Image
-                src="/fap-logo.svg?v=3"
-                alt="Faculdade Adventista do Paraná"
-                width={256}
-                height={256}
-                priority
-                className="h-auto w-[88px] shrink-0 rounded-lg shadow-lg sm:w-28"
-              />
             </div>
             <h1 className="max-w-xs text-4xl font-bold leading-tight tracking-tight">
               Gestão inteligente do laboratório.
@@ -97,7 +98,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-3 text-sm text-blue-50/90">
+          <div className="relative z-10 mt-10 grid gap-3 text-sm text-blue-50/90">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
               • Aprovações e filas por perfil
             </div>
