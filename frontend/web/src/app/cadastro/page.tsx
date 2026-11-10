@@ -64,8 +64,8 @@ export default function CadastroPage() {
   return (
     <div className="auth-page-background flex min-h-screen items-center justify-center px-4 py-10">
       <Card className="w-full max-w-2xl bg-white/95 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.12)] sm:p-8 dark:bg-slate-900">
-        <CardHeader className="mb-6 border-b border-border/70 pb-5">
-          <div className="flex items-center gap-3">
+        <CardHeader className="mb-6 justify-center border-b border-border/70 pb-5">
+          <div className="flex items-center justify-center gap-3 text-center">
             <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
               <UserPlus className="h-5 w-5" />
             </div>
