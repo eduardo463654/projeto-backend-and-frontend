@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -14,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fetchAgendamentos, fetchLaboratorios } from "@/lib/services";
+import { getStatusColor } from "@/lib/utils";
 import { usePolling } from "@/lib/use-polling";
 import type { Agendamento, Laboratorio } from "@/lib/types";
 
@@ -150,6 +152,8 @@ export default function CalendarioAdminPage() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
               {days.map((date) => {
+                const isToday = dateKey(date) === dateKey(new Date());
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
                 const dayBookings = agendamentos
                   .filter(
                     (item) =>
@@ -162,15 +166,41 @@ export default function CalendarioAdminPage() {
                 return (
                   <section
                     key={dateKey(date)}
-                    className="min-h-44 rounded-lg border border-border bg-muted/30 p-3"
+                    aria-current={isToday ? "date" : undefined}
+                    className={`min-h-48 rounded-lg border p-3 transition-colors ${
+                      isToday
+                        ? "border-primary/50 bg-primary/5 shadow-sm"
+                        : isWeekend
+                          ? "border-border bg-muted/45"
+                          : "border-border bg-muted/20"
+                    }`}
                   >
-                    <h2 className="mb-3 text-sm font-semibold">
-                      {date.toLocaleDateString("pt-BR", {
-                        weekday: "short",
-                        day: "2-digit",
-                        month: "2-digit",
-                      })}
-                    </h2>
+                    <div className="mb-3 flex min-h-8 items-start justify-between gap-2">
+                      <div>
+                        <h2
+                          className={`text-sm font-semibold capitalize ${
+                            isToday ? "text-primary" : "text-foreground"
+                          }`}
+                        >
+                          {date.toLocaleDateString("pt-BR", {
+                            weekday: "short",
+                            day: "2-digit",
+                            month: "short",
+                          })}
+                        </h2>
+                        {isToday && (
+                          <span className="mt-0.5 block text-[10px] font-medium uppercase text-primary">
+                            Hoje
+                          </span>
+                        )}
+                      </div>
+                      {dayBookings.length > 0 && (
+                        <Badge className="shrink-0 border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
+                          {dayBookings.length} reserva
+                          {dayBookings.length === 1 ? "" : "s"}
+                        </Badge>
+                      )}
+                    </div>
                     {dayBookings.length ? (
                       <div className="space-y-2">
                         {dayBookings.map((item) => (
@@ -179,16 +209,26 @@ export default function CalendarioAdminPage() {
                             type="button"
                             aria-label={`Ver agendamento de ${item.usuario?.nome ?? "usuário"}, ${item.horaInicio} a ${item.horaFim}`}
                             onClick={() => setSelectedBooking(item)}
-                            className="w-full rounded-md border border-border bg-card p-2 text-left text-xs transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className={`w-full rounded-md border border-l-4 bg-card p-2 text-left text-xs shadow-sm transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                              item.status === "aprovado"
+                                ? "border-l-emerald-500"
+                                : "border-l-amber-500"
+                            }`}
                           >
-                            <p className="font-medium">
-                              {item.horaInicio}–{item.horaFim}
-                            </p>
+                            <div className="flex items-start justify-between gap-1">
+                              <p className="font-semibold tabular-nums">
+                                {item.horaInicio}–{item.horaFim}
+                              </p>
+                              <Badge
+                                className={`${getStatusColor(item.status)} shrink-0 px-1.5 py-0 text-[9px] capitalize`}
+                              >
+                                {item.status}
+                              </Badge>
+                            </div>
                             <p className="mt-1 truncate">
                               {item.usuario?.nome ?? item.finalidade}
                             </p>
-                            <p className="text-muted-foreground">
-                              {item.status}{" "}
+                            <p className="mt-1 text-muted-foreground">
                               {item.computadorId
                                 ? `· ${item.computadorId}`
                                 : "· laboratório"}
