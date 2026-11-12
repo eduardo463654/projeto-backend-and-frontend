@@ -97,18 +97,6 @@ export default function LoginPage() {
               laboratório com clareza operacional.
             </p>
           </div>
-
-          <div className="relative z-10 mt-10 grid gap-3 text-sm text-blue-50/90">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-              • Aprovações e filas por perfil
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-              • Monitoramento de ocupação em tempo real
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-              • Fluxo profissional para informática e redes
-            </div>
-          </div>
         </div>
 
         <Card className="w-full border-0 bg-card/90 shadow-none">

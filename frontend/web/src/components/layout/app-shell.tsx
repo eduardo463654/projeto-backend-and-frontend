@@ -23,7 +23,7 @@ export function AppShell({
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [sessionChecked, setSessionChecked] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(true);
   const notificationHref =
     role === "admin"
       ? "/admin/aprovacoes"
@@ -35,6 +35,7 @@ export function AppShell({
     const userRole = getStoredUser()?.role;
     if (typeof userRole !== "string") {
       router.replace("/login");
+      setSessionChecked(false);
       return;
     }
 
@@ -42,10 +43,11 @@ export function AppShell({
       userRole === role || (role === "professor" && userRole === "funcionario");
     if (!roleMatches) {
       router.replace("/acesso-negado");
+      setSessionChecked(false);
       return;
     }
 
-    queueMicrotask(() => setSessionChecked(true));
+    setSessionChecked(true);
   }, [role, router]);
 
   const handleLogout = () => {
@@ -53,7 +55,13 @@ export function AppShell({
     router.push("/login");
   };
 
-  if (!sessionChecked) return null;
+  if (!sessionChecked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
+        Redirecionando...
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
