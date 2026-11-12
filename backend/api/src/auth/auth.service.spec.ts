@@ -1,4 +1,9 @@
 import bcrypt from 'bcrypt';
+
+jest.mock('../user/user.service', () => ({
+  UserService: class MockUserService {},
+}));
+
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
