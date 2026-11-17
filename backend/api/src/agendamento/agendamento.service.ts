@@ -190,6 +190,30 @@ export class AgendamentoService {
     return this.mapAgendamento(updated);
   }
 
+  async findDisponibilidade(laboratorioId: string, data: string) {
+    if (!laboratorioId || !data) {
+      throw new BadRequestException('Laboratório e data são obrigatórios.');
+    }
+
+    const agendamentos = await this.prismaService.agendamento.findMany({
+      where: {
+        laboratorioId,
+        data,
+        status: { in: ['pendente', 'aprovado'] },
+        computadorId: { not: null },
+      },
+      select: {
+        computadorId: true,
+        horaInicio: true,
+        horaFim: true,
+        status: true,
+      },
+      orderBy: { horaInicio: 'asc' },
+    });
+
+    return agendamentos;
+  }
+
   private mapAgendamento(agendamento: {
     id: string;
     usuarioId: string;

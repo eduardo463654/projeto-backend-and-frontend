@@ -107,3 +107,18 @@ export async function fetchDashboardData() {
 
   return { usuarios, laboratorios, agendamentos };
 }
+
+export async function fetchDisponibilidade(
+  laboratorioId: string,
+  data: string,
+): Promise<
+  Array<{
+    computadorId: string;
+    horaInicio: string;
+    horaFim: string;
+    status: Agendamento["status"];
+  }>
+> {
+  const params = new URLSearchParams({ laboratorioId, data });
+  return api.get(`/agendamentos/disponibilidade?${params.toString()}`);
+}

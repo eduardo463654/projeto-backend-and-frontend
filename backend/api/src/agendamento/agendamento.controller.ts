@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
@@ -37,6 +38,16 @@ export class AgendamentoController {
   @HttpCode(HttpStatus.OK)
   findByUser(@CurrentUser('sub') userId: string) {
     return this.agendamentoService.findByUser(userId);
+  }
+
+  @Get('disponibilidade')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  findDisponibilidade(
+    @Query('laboratorioId') laboratorioId: string,
+    @Query('data') data: string,
+  ) {
+    return this.agendamentoService.findDisponibilidade(laboratorioId, data);
   }
 
   @Get(':id')
