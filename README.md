@@ -1,3 +1,5 @@
+readme geral:
+
 # Laboratório de Informática
 
 LabFlow is a scheduling system for computer and networking laboratories.

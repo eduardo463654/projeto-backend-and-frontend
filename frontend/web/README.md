@@ -1,89 +1,35 @@
-# laboratorio_Informatica
-Sistema de agendamentos do laboratório de redes e informática.
+# Laboratório de Informática
 
-# LabFlow — Frontend de Gestão de Laboratórios
+LabFlow is a scheduling system for computer and networking laboratories.
 
-Aplicação Next.js para gerenciamento e agendamento de laboratórios de informática e redes, com dashboards por perfil, autenticação simulada, validação com Zod, UI em Tailwind e dados mockados com TanStack Query.
+## Project structure
 
-## Stack
+- `backend/api`: NestJS API using Prisma and PostgreSQL.
+- `frontend/web`: Next.js web application.
+- `docs/api-contract.md`: API endpoint and data contract.
 
-- Next.js 16 + App Router
-- TypeScript strict
-- Tailwind CSS
-- shadcn-inspired component primitives
-- React Hook Form + Zod
-- TanStack Query
-- Zustand
-- date-fns
-- Framer Motion
-- Recharts
-- next-themes
+## Run locally
 
-## Como rodar
+Requirements: Node.js, npm, and PostgreSQL.
 
-```bash
-npm install
-npm run dev
-```
+### API
 
-Acesse: http://localhost:3000
+1. In `backend/api`, install dependencies with `npm install`.
+2. Copy `.env.example` to `.env` and configure the database connection and a
+   secure `JWT_SECRET`.
+3. Generate the Prisma client with `npx prisma generate`.
+4. Start the API with `npm run start:dev`.
 
-## Estrutura principal
+The API listens on `http://localhost:3333` by default.
 
-```bash
-src/
-  app/
-    login/
-    cadastro/
-    aluno/
-    professor/
-    admin/
-    monitor/
-    acesso-negado/
-  components/
-    ui/
-    layout/
-  lib/
-    mock-data.ts
-    schemas.ts
-    services.ts
-    types.ts
-    utils.ts
-  store/
-    session-store.ts
-```
+### Frontend
 
-## Dados mockados e serviços
+1. In `frontend/web`, install dependencies with `npm install`.
+2. Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_API_URL` to the API
+   URL.
+3. Start the web application with `npm run dev`.
 
-Os mocks estão em `src/lib/mock-data.ts` e a camada de acesso em `src/lib/services.ts`. O fluxo foi estruturado para permitir troca simples por API real:
+The frontend is available at `http://localhost:3000`.
 
-1. Crie um serviço real em `src/lib/services.ts` ou em `src/services`.
-2. Mantenha as mesmas interfaces de `src/lib/types.ts`.
-3. Troque a implementação de `fetchAgendamentos`, `fetchUsuarios`, `fetchLaboratorios` e `fetchNotificacoes`.
-4. Os formulários e dashboards continuam funcionando sem mudanças de contrato.
-
-## Perfis implementados
-
-- aluno
-- professor
-- admin
-- monitor
-
-Cada perfil possui rota própria e navegação específica via sidebar.
-
-## Regras de negócio refletidas
-
-- status inicial pendente
-- RA obrigatório para aluno
-- fluxo de monitor fora do expediente
-- diferenciação entre laboratórios de redes e informática
-- dashboard analítico para admin
-- listagem e aprovações por perfil
-- dark mode
-- responsividade básica para desktop e mobile
-
-## Observações
-
-- A autenticação é simulada via cookie de sessão (`lab_session`).
-- O middleware em `src/middleware.ts` redireciona para `/login` ou `/acesso-negado`.
-- As telas foram deixadas navegáveis com dados realistas e estados de carregamento e vazios configurados.
+Environment files containing local values are excluded from Git. Do not commit
+secrets.
