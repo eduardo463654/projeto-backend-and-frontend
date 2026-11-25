@@ -19,10 +19,9 @@ export type ApiError = {
   error?: string;
 };
 
-const NODE_ENV = process.env.NODE_ENV ?? "development";
 const API_BASE_URL =
-  NODE_ENV === "production"
-    ? process.env.API_URL
+  process.env.NODE_ENV === "production"
+    ? "/api/backend"
     : (process.env.NEXT_PUBLIC_API_URL ?? defaultBaseUrl);
 
 export function setAuthSession(
